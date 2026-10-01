@@ -19,8 +19,8 @@ class Combat:
     def __init__(self, dresseur1, dresseur2):
         self.dresseur1 = dresseur1
         self.dresseur2 = dresseur2
-        self.dresseur_actif:Dresseur = None
-        self.dresseur_suivant:Dresseur = None
+        self.dresseur_actif = None
+        self.dresseur_suivant = None
         self.tour = 0
 
     def modifier_inventaire_pokemon(self, dresseur, pokemon):
@@ -49,12 +49,12 @@ class Combat:
         """ Chaque dresseur doit avoir un pokemon actif avant de commencer le combat """
         if self.dresseur_actif.pokemon_actif is None:
             print(f"{self.dresseur_actif.nom} n'a pas de pokemon actif pour combattre.")
-            choisir_pokemon = input(f"{self.dresseur_actif.nom}, choisissez un pokemon (avec son numéro attribué) parmi vos pokemons :\n\n {self.dresseur_actif.ajouter_pokemon()}\n\n->")
+            choisir_pokemon = int(input(f"{self.dresseur_actif.nom}, choisissez un pokemon (avec son numéro attribué) parmi vos pokemons :\n\n {self.dresseur_actif.ajouter_pokemon()}\n\n->"))
             self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon - 1]    # -1 pour l'index de la liste
 
         if self.dresseur_suivant.pokemon_actif is None:
                 print(f"{self.dresseur_suivant.nom} n'a pas de pokemon actif pour combattre.")
-                choisir_pokemon2 = input(f"{self.dresseur_suivant.nom}, choisissez un pokemon (avec son numéro attribué) parmi vos pokemons :\n\n {self.dresseur_suivant.ajouter_pokemon()}\n\n->")
+                choisir_pokemon2 = int(input(f"{self.dresseur_suivant.nom}, choisissez un pokemon (avec son numéro attribué) parmi vos pokemons :\n\n {self.dresseur_suivant.ajouter_pokemon()}\n\n->"))
                 self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choisir_pokemon2 - 1]    # -1 pour l'index de la liste
 
     def gestion_tour(self):

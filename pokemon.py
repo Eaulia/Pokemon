@@ -17,10 +17,11 @@ dans la classe Dresseur
 A CONTINUER : 
 dans la classe Pokemon
 - Differentes attaques des pokemons 
-- Ajouter les autres types (Normal, Feu, Eau, Herbe)
-- Creer les erreurs
 - Utilisation des objets 
 - Systeme de PV avec variables privées
+- niveau, hp qui augmente 
+- empoisonnement 
+- heritage 
 ~~~~~~~~~~~~~~~~~~~~~~
 COMMENTAIRES :
 ----------------------------------------------------
@@ -72,10 +73,18 @@ class Type:
 type_electrique = Type("Electrique", faiblesse=[], resistance=["Electrique"])
 
 class Pokemon:
-    def __init__(self, nom:str, pv_max:int, type1, type2 = None):
+    def __init__(self, nom:str, pv_max:int, atk1:str, dgt1:int, atk2:str, dgt2:int, type1, atksp = None, dgtsp = None, type2 = None):
         self.nom = nom
         self.__pv = pv_max # pv actuels du pokemon
         self.__pv_max = pv_max
+
+        self.atk1 = atk1
+        self.dgt1 = dgt1
+        self.atk2 = atk2
+        self.dgt2 = dgt2
+        self.atksp = atksp
+        self.dgtsp = dgtsp
+
         if pv_max <= 0:
             raise PVInvalideError("Les PV max doivent être supérieurs à 0, faut vrm etre con pour mettre un pv négatif ou nul a son propre pokemon!")
         
@@ -156,6 +165,11 @@ class Pokemon:
             else:
                 self.set_pv(self.get_pv() + value)
 
+class PokemonAttaque(Pokemon):
+    def __init__(self, nom: str, pv_max: int, atk1: str, dgt1: int, atk2: str, dgt2: int, type1, atksp=None, dgtsp=None, type2=None):
+        super().__init__(nom, pv_max, atk1, dgt1, atk2, dgt2, type1, atksp, dgtsp, type2)
+        
+
 class Dresseur:
     def __init__(self, nom:str="Dresseur"):
         self.nom = nom
@@ -197,9 +211,9 @@ class Dresseur:
             res += 1
 
 # exemple d'utilisation pour obtenir le type d'un pokemon 
-Pokemon1 = Pokemon("Lixy", type_electrique)
-print(Pokemon1.afficher_types())
-print(Pokemon1.nb_degats_recus("Electrique"))
+Lixy = Pokemon("Lixy", 60, "atk simple", 10, "atk complexe", 30, type_electrique)
+print(Lixy.afficher_types())
+print(Lixy.nb_degats_recus("Electrique"))
 
 # exemple d'utilisation pour les objets 
 dresseur = Dresseur()
