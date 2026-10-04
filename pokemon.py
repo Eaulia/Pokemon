@@ -9,6 +9,7 @@ dans la classe Type
 dans la classe Pokemon
 - afficher les types
 - calculer les degats reçus
+- Differentes attaques des pokemons 
 dans la classe Dresseur
 - Ajouter un pokemon 
 - Ajouter et retirer un objet 
@@ -16,53 +17,27 @@ dans la classe Dresseur
 ~~~~~~~~~~~~~~~~~~~~~~
 A CONTINUER : 
 dans la classe Pokemon
-- Differentes attaques des pokemons 
 - Utilisation des objets 
 - Systeme de PV avec variables privées
 - niveau, hp qui augmente 
 - empoisonnement 
-- heritage 
+- heritage pour les objets par exemple
+- Systeme niveau
+- Competences acquerissables selon le nv
+- Pourcentage de reussite pour les competences
+- evolution par pierre d'evo (boutique ou fin ce combat) ou par niveau
+- Systeme de soin avec potions →> consomme 1 tour
+- EV IV (cf. pokepedia)
 ~~~~~~~~~~~~~~~~~~~~~~
 COMMENTAIRES :
+: str | None signifie que la variable peut etre un str ou un None
 ----------------------------------------------------
 """
 
 from exceptions import *
 
-# Chaque points faibles et forts pour chaque type de pokemon selon le lore
-types_pokemon = {
-    "Feu": {
-        "faiblesse": ["Eau", "Sol", "Roche"],
-        "resistance": ["Feu", "Plante", "Glace", "Insecte", "Acier"]
-    },
-    "Eau": {
-        "faiblesse": ["Plante", "Électrik"],
-        "resistance": ["Feu", "Eau", "Glace"]
-    },
-    "Plante": {
-        "faiblesse": ["Feu", "Glace", "Poison", "Vol", "Insecte"],
-        "resistance": ["Eau", "Plante", "Sol", "Roche"]
-    },
-    "Électrik": {
-        "faiblesse": ["Sol"],
-        "resistance": ["Électrik", "Vol", "Acier"]
-    },
-    "Vol": {
-        "faiblesse": ["Électrik", "Glace", "Roche"],
-        "resistance": ["Plante", "Combat", "Insecte"]
-    },
-    "Sol": {
-        "faiblesse": ["Eau", "Plante", "Glace"],
-        "resistance": ["Poison", "Roche"]
-    },
-    "Roche": {
-        "faiblesse": ["Eau", "Plante", "Combat", "Sol", "Acier"],
-        "resistance": ["Feu", "Poison", "Normal", "Vol"]
-    }
-}
-
 class Type:
-    def __init__(self, nom:str, faiblesse = None, resistance = None):
+    def __init__(self, nom:str, faiblesse : list | None = None, resistance : list | None = None):
         self.nom = nom
         self.faiblesse = faiblesse
         self.resistance = resistance
@@ -70,7 +45,14 @@ class Type:
 #que regarder la cote "defender"
 #mettre dans faiblesse si marqué 2
 #dans resistance si marqué 1/2 (cf energie.png)
-type_electrique = Type("Electrique", faiblesse=[], resistance=["Electrique"])
+# Chaque points faibles et forts pour chaque type de pokemon selon le lore
+type_feu = Type("Feu", faiblesse=["Eau", "Sol", "Roche"], resistance=["Feu", "Plante", "Glace", "Insecte", "Acier"])
+type_eau = Type("Eau", faiblesse=["Plante", "Électrik"], resistance=["Feu", "Eau", "Glace"])
+type_plante = Type("Plante", faiblesse=["Feu", "Glace", "Poison", "Vol", "Insecte"], resistance=["Eau", "Plante", "Sol", "Roche"])
+type_electrik = Type("Électrik", faiblesse=["Sol"], resistance=["Électrik", "Vol", "Acier"])
+type_vol = Type("Vol", faiblesse=["Électrik", "Glace", "Roche"], resistance=["Plante", "Combat", "Insecte"])
+type_sol = Type("Sol", faiblesse=["Eau", "Plante", "Glace"], resistance=["Poison", "Roche"])
+type_roche = Type("Roche", faiblesse=["Eau", "Plante", "Combat", "Sol", "Acier"], resistance=["Feu", "Poison", "Normal", "Vol"])
 
 class Pokemon:
     def __init__(self, nom:str, pv_max:int, atk1:str, dgt1:int, atk2:str, dgt2:int, type1, atksp = None, dgtsp = None, type2 = None):
@@ -94,6 +76,9 @@ class Pokemon:
 
         self.statisque = []
         self.attaque = []
+
+    def __repr__(self):
+        return f"{self.nom} (PV: {self.get_pv()}/{self.get_pv_max()})"
 
     # getter et setter pour les attr privés
     def get_pv(self):
@@ -131,15 +116,15 @@ class Pokemon:
 
     def est_faible_contre(self, pokemon):
         """ retourne True si le pokemon est faible contre l'autre pokemon et false si rien """
-        if types_pokemon.get(self.types[0].nom, {}).get("faiblesse"):
-            if pokemon.types[0].nom in types_pokemon[self.types[0].nom]["faiblesse"]:
+        for t in self.types:
+            if t.faiblesse and pokemon.types[0] in t.faiblesse:
                 return True
         return False
 
     def est_resistant_contre(self, pokemon):
         """ retourne True si le pokemon est resistant contre l'autre pokemon et false si rien """
-        if types_pokemon.get(self.types[0].nom, {}).get("resistance"):
-            if pokemon.types[0].nom in types_pokemon[self.types[0].nom]["resistance"]:
+        for t in self.types:
+            if t.resistance and pokemon.types[0].nom in t.resistance:
                 return True
         return False
 
@@ -205,13 +190,19 @@ class Dresseur:
 
     def afficher_pokemons(self):
         """ affiche les pokemons """
+        if not self.pokemon:
+            print("Aucun pokémon disponible.")
+            return
+        
         res = 1
         for pokemon in self.pokemon:
             print(f"{res}) {pokemon}")  # sous la forme : 1) Pikachu    2) Ronflex
             res += 1
 
 # exemple d'utilisation pour obtenir le type d'un pokemon 
-Lixy = Pokemon("Lixy", 60, "atk simple", 10, "atk complexe", 30, type_electrique)
+Lixy = Pokemon("Lixy", 60, "atk simple", 10, "atk complexe", 30, type_electrik)
+Pikachu = Pokemon("Pikachu", 40, "atk simple", 20, "atk complexe", 30, type_electrik)
+pokemondispo = ["Lixy", "Pikachu"]
 print(Lixy.afficher_types())
 print(Lixy.nb_degats_recus("Electrique"))
 

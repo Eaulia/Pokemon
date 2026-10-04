@@ -9,3 +9,11 @@ class ObjetIndisponibleError(Exception):
 class PVInvalideError(Exception):
     """si modification incohérente des PV."""
     pass
+
+class PokemonAlreadyHereError(Exception):
+    """si le pokemon est déjà possédé"""
+    pass
+
+class PokemonInexistantError(Exception):
+    """si le pokemon n'existe pas"""
+    pass
