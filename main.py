@@ -5,4 +5,8 @@ Le main.py pour la boucle principale en appelant les classes et fonctions des au
 Ne pas mettre de logique, de gestion, ou de conditions dans le main.py pour faire un fichier simple et propre.
 """
 
-from pokemon import Type, Pokemon, Dresseur
+from game import Game
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()

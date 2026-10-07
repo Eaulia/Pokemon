@@ -28,6 +28,7 @@ dans la classe Pokemon
 - evolution par pierre d'evo (boutique ou fin ce combat) ou par niveau
 - Systeme de soin avec potions →> consomme 1 tour
 - EV IV (cf. pokepedia)
+- Menu de depart
 ~~~~~~~~~~~~~~~~~~~~~~
 COMMENTAIRES :
 : str | None signifie que la variable peut etre un str ou un None
@@ -46,6 +47,7 @@ class Type:
 #mettre dans faiblesse si marqué 2
 #dans resistance si marqué 1/2 (cf energie.png)
 # Chaque points faibles et forts pour chaque type de pokemon selon le lore
+type_normal = Type("Normal", faiblesse=[], resistance=[])
 type_feu = Type("Feu", faiblesse=["Eau", "Sol", "Roche"], resistance=["Feu", "Plante", "Glace", "Insecte", "Acier"])
 type_eau = Type("Eau", faiblesse=["Plante", "Électrik"], resistance=["Feu", "Eau", "Glace"])
 type_plante = Type("Plante", faiblesse=["Feu", "Glace", "Poison", "Vol", "Insecte"], resistance=["Eau", "Plante", "Sol", "Roche"])
@@ -55,7 +57,7 @@ type_sol = Type("Sol", faiblesse=["Eau", "Plante", "Glace"], resistance=["Poison
 type_roche = Type("Roche", faiblesse=["Eau", "Plante", "Combat", "Sol", "Acier"], resistance=["Feu", "Poison", "Normal", "Vol"])
 
 class Pokemon:
-    def __init__(self, nom:str, pv_max:int, atk1:str, dgt1:int, atk2:str, dgt2:int, type1, atksp = None, dgtsp = None, type2 = None):
+    def __init__(self, nom:str, pv_max:int, atk1:str, dgt1:int, atk2:str, dgt2:int, type1, atksp = None, dgtsp = None, type2 = None, item = None):
         self.nom = nom
         self.__pv = pv_max # pv actuels du pokemon
         self.__pv_max = pv_max
@@ -66,6 +68,8 @@ class Pokemon:
         self.dgt2 = dgt2
         self.atksp = atksp
         self.dgtsp = dgtsp
+
+        self.item = []
 
         if pv_max <= 0:
             raise PVInvalideError("Les PV max doivent être supérieurs à 0, faut vrm etre con pour mettre un pv négatif ou nul a son propre pokemon!")
@@ -159,15 +163,24 @@ class Dresseur:
     def __init__(self, nom:str="Dresseur"):
         self.nom = nom
         self.pokemon = []
-        self.objet = []
+        self.objets = []
         self.pokemon_actif = None
 
-    def ajouter_pokemon(self, pokemon:Pokemon):
+    def tous_ko(self) -> bool:
+        """True si toute l'equipe est KO"""
+        if not self.pokemon:
+            return True
+        return all(pkm.est_ko() for pkm in self.pokemon)
+    
+    def ajouter_pokemon(self, pokemon:Pokemon, pokemon2:Pokemon|None = None, pokemon3:Pokemon|None = None):
         """ ajoute pokemon et limite nombre de pokemon à 3 """
-        if len(self.pokemon) < 3:
-            self.pokemon.append(pokemon)
-        else:
-            print("tu ne peux pas avoir plus de pokemon :/")
+        liste = [pokemon, pokemon2, pokemon3]
+        for pkm in liste:
+            if pkm is not None:
+                if len(self.pokemon) < 3:
+                    self.pokemon.append(pokemon)
+                else:
+                    print("tu ne peux pas avoir plus de pokemon :/")
 
     def retirer_pokemon(self, pokemon:str):
         """ retire pokemon """
@@ -176,17 +189,17 @@ class Dresseur:
 
     def ajouter_objet(self, objet):
         """ ajoute objet """
-        self.objet.append(objet)
+        self.objets.append(objet)
         return f'{objet} a été ajouté'
 
     def retirer_objet(self, objet):
         """ retire objet """
-        self.objet.remove(objet)
+        self.objets.remove(objet)
         return f'{objet} a été retiré'
 
     def afficher_inventaire(self):
         """ affiche inventaire """
-        return f'INVENTAIRE : {self.objet}'
+        return f'INVENTAIRE : {self.objets}'
 
     def afficher_pokemons(self):
         """ affiche les pokemons """
@@ -199,14 +212,19 @@ class Dresseur:
             print(f"{res}) {pokemon}")  # sous la forme : 1) Pikachu    2) Ronflex
             res += 1
 
+    def afficher_objets(self):
+        """ affiche les objets """
+        if not self.objets:
+            print("Aucun objet disponible.")
+            return
+        
+        res = 1
+        for objet in self.objets:
+            print(f"{res}) {objet.nom}")
+            res += 1
+
 # exemple d'utilisation pour obtenir le type d'un pokemon 
 Lixy = Pokemon("Lixy", 60, "atk simple", 10, "atk complexe", 30, type_electrik)
 Pikachu = Pokemon("Pikachu", 40, "atk simple", 20, "atk complexe", 30, type_electrik)
-pokemondispo = ["Lixy", "Pikachu"]
-print(Lixy.afficher_types())
-print(Lixy.nb_degats_recus("Electrique"))
-
-# exemple d'utilisation pour les objets 
-dresseur = Dresseur()
-print(dresseur.ajouter_objet("pomme"))
-print(dresseur.afficher_inventaire())
+Chinchidou = Pokemon("Chinchidou", 30, "atk simple", 20, "atk complexe", 30, type_normal)
+pokemondispo = [Lixy, Pikachu, Chinchidou]
