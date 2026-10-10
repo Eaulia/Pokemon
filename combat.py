@@ -34,9 +34,9 @@ class Combat:
             pokemon = input("Quel pokemon voulez-vous ajouter ? (Entrez le nom)\n\n-> ")
             if pokemon not in str(pokemondispo):
                 raise PokemonInexistantError("ce pokemon n'est pas disponible, vérifiez le nom ou ajoutez-le")
-            for pkm in pokemondispo:
-                if str(pkm.nom) == pokemon:
-                    dresseur.ajouter_pokemon(pkm)
+            for pokemon in pokemondispo:
+                if str(pokemon.nom) == pokemon:
+                    dresseur.ajouter_pokemon(pokemon)
             
         elif choix == "2":
             print(f'Pokemons de {dresseur.nom} : {dresseur.pokemon}')
@@ -60,8 +60,14 @@ class Combat:
     def lancer_combat(self):
         if self.dresseur1.pokemon is None:
             print(f"{self.dresseur1.nom} n'a pas de pokemon pour combattre.")
+            modifier_inventaire = input(f"Voulez-vous modifier l'inventaire de {self.dresseur1.nom} ? (1) Oui / (2) Non\n\n-> ")
+            if modifier_inventaire == "1":
+                self.modifier_inventaire_pokemon(self.dresseur1, None)
         if self.dresseur2.pokemon is None:
             print(f"{self.dresseur2.nom} n'a pas de pokemon pour combattre.")
+            modifier_inventaire = input(f"Voulez-vous modifier l'inventaire de {self.dresseur2.nom} ? (1) Oui / (2) Non\n\n-> ")
+            if modifier_inventaire == "1":
+                self.modifier_inventaire_pokemon(self.dresseur2, None)
 
         """ determine l'ordre des dresseurs pour le lancement du combat """
         premier_dresseur = random.choice([self.dresseur1, self.dresseur2])
@@ -92,42 +98,48 @@ class Combat:
         self.tour += 1
 
     def attaquer(self):
-        """attaque le pokemon adverse"""
+        """ gestion de l'attaque du pokemon adverse """
         if self.dresseur_actif is None or self.dresseur_suivant is None:
             print(" Aucun combat actif ")
             return
-        
+
         pkm_attaquant = self.dresseur_actif.pokemon_actif
         pkm_defenseur = self.dresseur_suivant.pokemon_actif
 
-        if pkm_attaquant is None or pkm_defenseur is None :
+        if pkm_attaquant is None or pkm_defenseur is None:
             print("pas de pokemon attaquant ou defenseur")
             return
 
+        # Vérifier que le Pokémon a des attaques
+        if not pkm_attaquant.attaques:
+            print(f"{pkm_attaquant.nom} ne connaît aucune attaque !")
+            return
+
         print(f"\n-- Attaques de {pkm_attaquant.nom} --")
-        print(f"1) {pkm_attaquant.atk1} ({pkm_attaquant.dgt1} dégâts)")
-        print(f"2) {pkm_attaquant.atk2} ({pkm_attaquant.dgt2} dégâts)")
-        
-        choix = input("Choisissez une attaque (1 ou 2) : ")
-        if choix == "1":
-            nom_atk, degats_base = pkm_attaquant.atk1, pkm_attaquant.dgt1
+        for i, atk in enumerate(pkm_attaquant.attaques, 1):
+            print(f"{i}) {atk.nom} ({atk.degats} dégâts, Type: {atk.type_attaque.nom})")
+
+        choix = int(input("Choisissez une attaque (numéro) : ")) - 1
+
+        if 0 <= choix < len(pkm_attaquant.attaques):
+            attaque_choisie = pkm_attaquant.attaques[choix]
+
+            # Calcul du multiplicateur basé sur le type de l'attaque
+            mult = pkm_defenseur.nb_degats_recus(attaque_choisie.type_attaque.nom)
+            degats_finaux = int(attaque_choisie.degats * mult)
+
+            pkm_defenseur.prendre_degats(degats_finaux)
+            print(f"\n{pkm_attaquant.nom} utilise {attaque_choisie.nom} sur {pkm_defenseur.nom} !")
+            if mult > 1.0:
+                print(random.choice(["Wooooow t'es trop chaud !", "C'est quoi cette attaque de fou là!"]))
+            elif mult < 1.0:
+                print(random.choice(["Pas fou, pas fou...", "Keske tu fais ???", "T'es pas sauvable toi-", "mouais.."]))
+
+            print(f"{self.dresseur_actif.nom} attaque {self.dresseur_suivant.nom} avec son {self.dresseur_actif.pokemon_actif} !")
+            print(f"{pkm_defenseur.nom} subit {degats_finaux} dégâts. (PV de {pkm_defenseur.nom}: {pkm_defenseur.get_pv()}/{pkm_defenseur.get_pv_max()})")
         else:
-            nom_atk, degats_base = pkm_attaquant.atk2, pkm_attaquant.dgt2
+            print("Choix invalide !")
 
-        # Calcul du multiplicateur basé sur le type principal de l'attaquant
-        type_atk = pkm_attaquant.types[0].nom
-        mult = pkm_defenseur.nb_degats_recus(type_atk)
-        degats_finaux = int(degats_base * mult)
-
-        pkm_defenseur.prendre_degats(degats_finaux)
-        print(f"\n{pkm_attaquant.nom} utilise {nom_atk} sur {pkm_defenseur.nom} !")
-        if mult > 1.0:
-            print("Wooooow t'es trop chaud !")
-        elif mult < 1.0:
-            print(random.choice(["Pas fou, pas fou...", "Keske tu fais ???", "T'es pas sauvable toi-", "mouais.."]))
-
-        print(f"{self.dresseur_actif.nom} attaque {self.dresseur_suivant.nom} avec son {self.dresseur_actif.pokemon_actif} !")
-        print(f"{pkm_defenseur.nom} subit {degats_finaux} dégâts. (PV : {pkm_defenseur.get_pv()}/{pkm_defenseur.get_pv_max()})")
         
     def gestion_tour(self):
         """ gere le gameplay d'un tour pendant un combat """
@@ -171,12 +183,23 @@ class Combat:
 
         if pkm_adversaire.est_ko():
             print(f"\n{pkm_adversaire.nom} est KO !")
+
+            # Gain d'xp
+            xp_gagnee = 50 * pkm_adversaire.niveau
+            pkm_actif.gagner_xp(xp_gagnee)
+
             if self.dresseur_suivant.tous_ko():
                 print(f"gg {self.dresseur_actif.nom} !")
-                return False  # Arrête la boucle while
+                return False  # stop la boucle while
             else:
                 # Force l'adversaire à choisir un autre Pokémon
-                pass
+                print(f"\n{self.dresseur_suivant.nom}, choisissez un autre Pokémon !")
+                self.dresseur_suivant.afficher_pokemons()
+                choix_nouveau = int(input("Quel Pokémon envoyer ? (numéro) : ")) - 1
+                if 0 <= choix_nouveau < len(self.dresseur_suivant.pokemon):
+                    self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choix_nouveau]
+                    print(f"{self.dresseur_suivant.nom} envoie {self.dresseur_suivant.pokemon_actif.nom} !")
+
 
         # 2. Alternance des dresseurs pour le tour suivant
         self.dresseur_actif, self.dresseur_suivant = self.dresseur_suivant, self.dresseur_actif

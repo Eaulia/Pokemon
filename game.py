@@ -2,7 +2,7 @@ from combat import Combat
 from pokemon import Dresseur, Lixy, Pikachu, Chinchidou
 
 class Game:
-    def __init__(self):
+    def __init__():
         pass
 
     def run(self):
@@ -15,7 +15,7 @@ class Game:
 
         #Combat
         #a.modifier_inventaire_pokemon(a.dresseur1, Lixy)
-        #a.modifier_inventaire_pokemon(a.dresseur2)
+        #a.modifier_inventaire_pokemon(a.dresseur2, Pikachu)
         a = Combat(d1, d2)
         a.lancer_combat()
 
