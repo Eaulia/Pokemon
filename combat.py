@@ -168,14 +168,40 @@ class Combat:
             if not self.dresseur_actif.objets:
                 print("ouais, nan ton tour a servi à rien bahhaha")
             else:
-                print(self.dresseur_actif.afficher_objets())
-                choisir_item = int(input((f"Choisissez un objet (avec son numéro attribué) :\n\n->"))) - 1 #-1 pour l'index
-                objet = self.dresseur_actif.objets[choisir_item]
-                pkm_actif.soigner(20)
-                self.dresseur_actif.retirer_objet(objet)
-                print(f"Objet a été utilisé sur {self.dresseur_actif.pokemon_actif}")
+                print("\n-- Objets disponibles --")
+                self.dresseur_actif.afficher_objets()
 
-            
+                try:
+                    choisir_item = int(input(f"\nChoisissez un objet (numéro) : ")) - 1
+                    if 0 <= choisir_item < len(self.dresseur_actif.objets):
+                        objet = self.dresseur_actif.objets[choisir_item]
+
+                        # Si c'est un ItemSoin ou ItemRevive, l'utiliser
+                        if hasattr(objet, 'utiliser'):
+                            # Choisir sur quel Pokémon utiliser l'objet
+                            print("\n-- Choisissez un Pokémon --")
+                            self.dresseur_actif.afficher_pokemons()
+                            choix_pkm = int(input("Sur quel Pokémon ? (numéro) : ")) - 1
+
+                            if 0 <= choix_pkm < len(self.dresseur_actif.pokemon):
+                                pokemon_cible = self.dresseur_actif.pokemon[choix_pkm]
+
+                                # Utiliser l'objet
+                                if objet.utiliser(pokemon_cible):
+                                    self.dresseur_actif.retirer_objet(objet)
+                                else:
+                                    print("L'objet n'a pas pu être utilisé.")
+                            else:
+                                print("Choix invalide")
+                        else:
+                            print("Cet objet ne peut pas être utilisé en combat.")
+                    else:
+                        print("Choix invalide")
+
+                except ValueError:
+                    print("Entrée invalide")
+
+
         if choix == "3":
             choisir_pokemon = int(input(f"choisissez un pokemon (avec son numéro attribué) parmi vos pokemons :\n->"))
             print(self.dresseur_actif.afficher_pokemons())

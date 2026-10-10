@@ -2,7 +2,7 @@ from combat import Combat
 from pokemon import Dresseur, Lixy, Pikachu, Chinchidou
 
 class Game:
-    def __init__():
+    def __init__(self):
         pass
 
     def run(self):
