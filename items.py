@@ -11,7 +11,7 @@ COMMENTAIRES :
 """
 
 from exceptions import *
-
+        
 class Items:
     def __init__(self, nom: str, description: str = "") -> None:
         self.nom = nom

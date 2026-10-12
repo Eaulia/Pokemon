@@ -4,14 +4,16 @@ COMBAT.PY - Combat et Logique de combat
 ~~~~~~~~~~~~~~~~~~~~~~
 A CONTINUER : 
 dans la classe Combat
-- Dans gestion_tour(), le choix 2 sur les objets pas bien fait
+- mieux faire les calculs d'attaques ?
 ~~~~~~~~~~~~~~~~~~~~~~
 COMMENTAIRES :
 j'utilise "#CHANGER" pour dire que cette donnée est temporaire et sera à modifier
+j'ai modif un peu pour les attaques mais en vrai jsais pas trop comment ça fonctionne dans le vrai jeu
 ----------------------------------------------------
 """
 import random
-from pokemon import Dresseur, Lixy, Pikachu, pokemondispo
+from pokemon import pokemondispo, Pokemon, Attaque, type_poison
+from dresseur import Dresseur
 from items import Fraise
 from exceptions import PokemonInexistantError
 
@@ -28,7 +30,7 @@ class Combat:
     def modifier_inventaire_pokemon(self, dresseur, pokemon=None):
         """modifier l'inventaire en boucle"""
         print(f"\n-- Inventaire de {dresseur.nom}--")
-        choix = input(f"\n1) Ajouter un pokemon\n2) Retirer un pokemon\n3) Afficher l'inventaire\n\n-> ")
+        choix = input(f"1) Ajouter un pokemon\n2) Retirer un pokemon\n3) Afficher l'inventaire\n-> ")
         if choix == "1":
             print(f'pokemons disponibles : {pokemondispo}')
             pokemon = input("Quel pokemon voulez-vous ajouter ? (Entrez le nom)\n\n-> ")
@@ -97,14 +99,21 @@ class Combat:
         self.dresseur_actif, self.dresseur_suivant = self.dresseur_suivant, self.dresseur_actif
         self.tour += 1
 
+    def calculer_degats(self, pkm_attaquant, pkm_defenseur, attaque):
+        """Calcul du multiplicateur basé sur le type de l'attaque"""
+        mult = pkm_defenseur.nb_degats_recus(attaque.type_attaque.nom)
+        degats_de_base = (attaque.degats + (pkm_attaquant.niveau * 2)) / 3 
+        # faire /4 si les attaques sont tjr trop puissantes
+        return int(degats_de_base * mult)
+
     def attaquer(self):
         """ gestion de l'attaque du pokemon adverse """
         if self.dresseur_actif is None or self.dresseur_suivant is None:
             print(" Aucun combat actif ")
             return
 
-        pkm_attaquant = self.dresseur_actif.pokemon_actif
-        pkm_defenseur = self.dresseur_suivant.pokemon_actif
+        pkm_attaquant:Pokemon|None = self.dresseur_actif.pokemon_actif
+        pkm_defenseur:Pokemon|None = self.dresseur_suivant.pokemon_actif
 
         if pkm_attaquant is None or pkm_defenseur is None:
             print("pas de pokemon attaquant ou defenseur")
@@ -117,19 +126,24 @@ class Combat:
 
         print(f"\n-- Attaques de {pkm_attaquant.nom} --")
         for i, atk in enumerate(pkm_attaquant.attaques, 1):
-            print(f"{i}) {atk.nom} ({atk.degats} dégâts, Type: {atk.type_attaque.nom})")
+            degats = self.calculer_degats(pkm_attaquant, pkm_defenseur, atk)
+            print(f"{i}) {atk.nom} ({degats} dégâts, Type: {atk.type_attaque.nom})")
 
         choix = int(input("Choisissez une attaque (numéro) : ")) - 1
 
         if 0 <= choix < len(pkm_attaquant.attaques):
-            attaque_choisie = pkm_attaquant.attaques[choix]
+            attaque_choisie:Attaque|None = pkm_attaquant.attaques[choix]
 
             # Calcul du multiplicateur basé sur le type de l'attaque
-            mult = pkm_defenseur.nb_degats_recus(attaque_choisie.type_attaque.nom)
-            degats_finaux = int(attaque_choisie.degats * mult)
+            degats_finaux = self.calculer_degats(pkm_attaquant, pkm_defenseur, attaque_choisie)
 
             pkm_defenseur.prendre_degats(degats_finaux)
             print(f"\n{pkm_attaquant.nom} utilise {attaque_choisie.nom} sur {pkm_defenseur.nom} !")
+            
+            if attaque_choisie.type_attaque == type_poison:
+                pkm_defenseur.statut = "empoisonné"
+                print(f"{pkm_defenseur} est empoisonné")
+
             if mult > 1.0:
                 print(random.choice(["Wooooow t'es trop chaud !", "C'est quoi cette attaque de fou là!"]))
             elif mult < 1.0:
@@ -139,6 +153,7 @@ class Combat:
             print(f"{pkm_defenseur.nom} subit {degats_finaux} dégâts. (PV de {pkm_defenseur.nom}: {pkm_defenseur.get_pv()}/{pkm_defenseur.get_pv_max()})")
         else:
             print("Choix invalide !")
+        return degats_finaux
 
         
     def gestion_tour(self):
@@ -148,8 +163,8 @@ class Combat:
             print(" Aucun dresseur actif ")
             return
 
-        pkm_actif = self.dresseur_actif.pokemon_actif
-        pkm_adversaire = self.dresseur_suivant.pokemon_actif
+        pkm_actif:Pokemon|None = self.dresseur_actif.pokemon_actif
+        pkm_adversaire:Pokemon|None = self.dresseur_suivant.pokemon_actif
 
         if pkm_actif is None or pkm_adversaire is None:
             print(" Aucun pokemon actif ")
@@ -157,6 +172,9 @@ class Combat:
 
         print(f"\n\n======== TOUR {self.tour} =========")
         print(f"A {self.dresseur_actif.nom} de jouer")
+
+        if pkm_actif.statut == "empoisonné":
+            pkm_actif.appliquer_poison()
         print(f"Pokémon actif : {pkm_actif.nom} ({pkm_actif.get_pv()}/{pkm_actif.get_pv_max()} PV)")
         print(f"Adversaire : {pkm_adversaire.nom} ({pkm_adversaire.get_pv()}/{pkm_adversaire.get_pv_max()} PV)")
 

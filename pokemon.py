@@ -2,33 +2,14 @@
 ----------------------------------------------------
 POKEMON.PY - Pokemons et Dresseurs
 ~~~~~~~~~~~~~~~~~~~~~~
-FAITS :
-dans la classe Type
-- Avoir 1 ou 2 types par Pokemon
-- Type Electrique
-dans la classe Pokemon
-- afficher les types
-- calculer les degats reçus
-- Differentes attaques des pokemons 
-dans la classe Dresseur
-- Ajouter un pokemon 
-- Ajouter et retirer un objet 
-- Afficher l'inventaire
-~~~~~~~~~~~~~~~~~~~~~~
 A CONTINUER : 
 dans la classe Pokemon
-- Utilisation des objets 
 - Systeme de PV avec variables privées
 - niveau, hp qui augmente 
-- empoisonnement 
-- heritage pour les objets par exemple
 - Systeme niveau
 - Competences acquerissables selon le nv
-- Pourcentage de reussite pour les competences
 - evolution par pierre d'evo (boutique ou fin ce combat) ou par niveau
-- Systeme de soin avec potions →> consomme 1 tour
 - EV IV (cf. pokepedia)
-- Menu de depart
 ~~~~~~~~~~~~~~~~~~~~~~
 COMMENTAIRES :
 : str | None signifie que la variable peut etre un str ou un None
@@ -55,6 +36,7 @@ type_electrik = Type("Électrik", faiblesse=["Sol"], resistance=["Électrik", "V
 type_vol = Type("Vol", faiblesse=["Électrik", "Glace", "Roche"], resistance=["Plante", "Combat", "Insecte"])
 type_sol = Type("Sol", faiblesse=["Eau", "Plante", "Glace"], resistance=["Poison", "Roche"])
 type_roche = Type("Roche", faiblesse=["Eau", "Plante", "Combat", "Sol", "Acier"], resistance=["Feu", "Poison", "Normal", "Vol"])
+type_poison = Type("Poison", faiblesse=["Sol", "Psy"], resistance=["Combat", "Poison", "Plante", "Insecte", "Fée"])
 
 class Attaque:
     """ sous-classe, attaque qu'un Pokemon peut utiliser"""
@@ -76,6 +58,7 @@ class Pokemon:
 
         self.attaques = []  # Liste d'objets Attaque (max 4)
         self.item = []
+        self.statut = None
 
         if pv_max <= 0:
             raise PVInvalideError("Les PV max doivent être supérieurs à 0, faut vrmt etre con pour mettre un pv négatif ou nul a son propre pokemon!")
@@ -243,6 +226,11 @@ class Pokemon:
             xp_requis = self.xp_requis_prochain_niveau()
             return f"{self.nom} - Niveau {self.niveau} - XP: {self.xp}/{xp_requis} - {self.get_pv()}/{self.get_pv_max()} PV"
 
+    def appliquer_poison(self):
+        if self.statut == "empoisonné":
+            degats_poison = int(self.get_pv_max() * 1/8)  # 12% des PV max
+            self.prendre_degats(degats_poison)
+            print(f"{self.nom} est empoisonné, il perd {degats_poison} PV ! D/")
         
 
 # exemple d'utilisation pour obtenir le type d'un pokemon 
@@ -257,6 +245,9 @@ etincelle = Attaque("Étincelle", 65, type_electrik, 100)
 tonnerre = Attaque("Tonnerre", 90, type_electrik, 70)
 cage_eclair = Attaque("Cage-Éclair", 50, type_electrik, 90)
 
+# Attaques Poison
+gaz_toxik = Attaque("Gaz_toxik", 0, type_poison, 90)
+
 # Lixy (Électrik)
 Lixy = Pokemon("Lixy", 60, type_electrik)
 Lixy.apprendre_attaque(charge)
@@ -270,4 +261,9 @@ Pikachu.apprendre_attaque(vive_attaque)
 Pikachu.apprendre_attaque(tonnerre)
 Pikachu.apprendre_attaque(cage_eclair)
 
-pokemondispo = [Lixy, Pikachu]
+# Smogo (Poison)
+Smogo = Pokemon("Smogo", 40, type_poison)
+Smogo.apprendre_attaque(charge)
+Smogo.apprendre_attaque(gaz_toxik)
+
+pokemondispo = [Lixy, Pikachu, Smogo]
