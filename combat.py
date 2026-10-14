@@ -15,8 +15,8 @@ import random
 from pokemon import pokemondispo, Pokemon, Attaque, type_poison
 from dresseur import Dresseur
 from items import Fraise
-from decoration import barre_de_vie, afficher_texte, afficher_texte_rapide, afficher_cadre
-import questionary as qr
+from decoration import barre_de_vie, afficher_texte, afficher_cadre
+from exceptions import PokemonInexistantError
 
 
 class Combat:
@@ -92,7 +92,10 @@ class Combat:
             afficher_cadre(f"Pokemons de {self.dresseur_actif.nom}", lignes_pokemons)
             afficher_texte("choisissez un pokemon (avec son numéro attribué) parmi vos pokemons")
             choisir_pokemon = int(input(f"-> "))
-            self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon -1]    # -1 pour l'index de la liste
+            if 1 <= choisir_pokemon <= len(self.dresseur_actif.pokemon):
+                self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon - 1]
+            else:
+                print("Numéro invalide, réessayez.")
 
         if self.dresseur_suivant.pokemon_actif is None:
             lignes_pokemons = [f"{self.dresseur_suivant.nom} n'a pas de pokémon actif."]
@@ -104,7 +107,10 @@ class Combat:
             afficher_cadre(f"Pokemons de {self.dresseur_suivant.nom}", lignes_pokemons)
             afficher_texte("choisissez un pokemon (avec son numéro attribué) parmi vos pokemons")
             choisir_pokemon2 = int(input(f"-> "))
-            self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choisir_pokemon2 - 1]    # -1 pour l'index de la liste
+            if 1 <= choisir_pokemon2 <= len(self.dresseur_suivant.pokemon):
+                self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choisir_pokemon2 - 1]
+            else:
+                print("Numéro invalide, réessayez.")
 
     def changer_tour(self):
         """alterne joueur actif et suivant"""
@@ -120,6 +126,7 @@ class Combat:
 
     def attaquer(self):
         """ gestion de l'attaque du pokemon adverse """
+        degats_finaux = 0
         if self.dresseur_actif is None or self.dresseur_suivant is None:
             afficher_texte(" Aucun combat actif ")
             return

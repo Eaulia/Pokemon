@@ -9,3 +9,7 @@ class ObjetIndisponibleError(Exception):
 class PVInvalideError(Exception):
     """si modification incohérente des PV."""
     pass
+
+class PokemonInexistantError(Exception):
+    """pkm pas dans la base de donnees"""
+    pass

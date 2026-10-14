@@ -21,7 +21,7 @@ class Dresseur:
         for pkm in liste:
             if pkm is not None:
                 if len(self.pokemon) < 3:
-                    self.pokemon.append(pokemon)
+                    self.pokemon.append(pkm)
                 else:
                     print("tu ne peux pas avoir plus de pokemon :/")
 
