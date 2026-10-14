@@ -84,7 +84,10 @@ class Combat:
             for i, pkm in enumerate(self.dresseur_actif.pokemon, 1):
                 print(f"{i}) {pkm}")
             choisir_pokemon = int(input(f"choisissez un pokemon (avec son numéro attribué) parmi vos pokemons\n\n-> "))
-            self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon -1]    # -1 pour l'index de la liste
+            if 1 <= choisir_pokemon <= len(self.dresseur_actif.pokemon):
+                self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon - 1]
+            else:
+                print("Numéro invalide, réessayez.")
 
         if self.dresseur_suivant.pokemon_actif is None:
             print(f"{self.dresseur_suivant.nom} n'a pas de pokemon actif pour combattre.")
@@ -92,7 +95,10 @@ class Combat:
             for i, pkm in enumerate(self.dresseur_suivant.pokemon, 1):
                 print(f"{i}) {pkm}")
             choisir_pokemon2 = int(input(f"choisissez un pokemon (avec son numéro attribué) parmi vos pokemons\n\n-> "))
-            self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choisir_pokemon2 - 1]    # -1 pour l'index de la liste
+            if 1 <= choisir_pokemon2 <= len(self.dresseur_suivant.pokemon):
+                self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choisir_pokemon2 - 1]
+            else:
+                print("Numéro invalide, réessayez.")
 
     def changer_tour(self):
         """alterne joueur actif et suivant"""
@@ -108,6 +114,7 @@ class Combat:
 
     def attaquer(self):
         """ gestion de l'attaque du pokemon adverse """
+        degats_finaux = 0
         if self.dresseur_actif is None or self.dresseur_suivant is None:
             print(" Aucun combat actif ")
             return
@@ -135,6 +142,7 @@ class Combat:
             attaque_choisie:Attaque|None = pkm_attaquant.attaques[choix]
 
             # Calcul du multiplicateur basé sur le type de l'attaque
+            mult = pkm_defenseur.nb_degats_recus(attaque_choisie.type_attaque.nom)
             degats_finaux = self.calculer_degats(pkm_attaquant, pkm_defenseur, attaque_choisie)
 
             pkm_defenseur.prendre_degats(degats_finaux)
