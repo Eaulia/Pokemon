@@ -11,10 +11,11 @@ j'utilise "#CHANGER" pour dire que cette donnée est temporaire et sera à modif
 j'ai modif un peu pour les attaques mais en vrai jsais pas trop comment ça fonctionne dans le vrai jeu
 ----------------------------------------------------
 """
+from __future__ import annotations
+
 import random
 from pokemon import pokemondispo, Pokemon, Attaque, type_poison
 from dresseur import Dresseur
-from items import Fraise
 from decoration import barre_de_vie, afficher_texte, afficher_cadre
 from exceptions import PokemonInexistantError
 
@@ -34,24 +35,28 @@ class Combat:
         choix = int(input("-> "))
 
         if choix == 1:
-            afficher_texte(f'pokemons disponibles :')
+            afficher_texte("pokemons disponibles :")
             for pkm in pokemondispo:
                 afficher_texte(f'{pkm}')
-            pokemon = input("Quel pokemon voulez-vous ajouter ? (Entrez le nom)\n\n-> ")
-            if pokemon not in str(pokemondispo):
+            pokemon_nom = input("Quel pokemon voulez-vous ajouter ? (Entrez le nom)\n\n-> ").strip()
+            pokemon_choisi = next(
+                (pkm for pkm in pokemondispo if pkm.nom.casefold() == pokemon_nom.casefold()),
+                None,
+            )
+            if pokemon_choisi is None:
                 raise PokemonInexistantError("ce pokemon n'est pas disponible, vérifiez le nom ou ajoutez-le")
-            for pokemon in pokemondispo:
-                if str(pokemon.nom) == pokemon:
-                    dresseur.ajouter_pokemon(pokemon)
+            dresseur.ajouter_pokemon(pokemon_choisi)
             
         elif choix == 2:
             afficher_texte(f'Pokemons de {dresseur.nom} : {dresseur.pokemon}')
-            pokemon = input("Quel pokemon voulez-vous retirer ? (Entrez le nom)\n\n-> ")
-            if pokemon not in str(dresseur.pokemon):
+            pokemon_nom = input("Quel pokemon voulez-vous retirer ? (Entrez le nom)\n\n-> ").strip()
+            pokemon_choisi = next(
+                (pkm for pkm in dresseur.pokemon if pkm.nom.casefold() == pokemon_nom.casefold()),
+                None,
+            )
+            if pokemon_choisi is None:
                 raise PokemonInexistantError("tu n'as pas ce pokemon.. ):")
-            for pkm in pokemondispo:
-                if str(pkm.nom) == pokemon:
-                    dresseur.retirer_pokemon(pkm)
+            dresseur.retirer_pokemon(pokemon_choisi)
 
         elif choix == 3:
             afficher_texte(f"\nInventaire de {dresseur.nom} : {dresseur.pokemon}")
@@ -64,16 +69,22 @@ class Combat:
             return
 
     def lancer_combat(self):
-        if self.dresseur1.pokemon is None:
+        if not self.dresseur1.pokemon:
             afficher_cadre(f"\n{self.dresseur1.nom} n'a pas de pokemon pour combattre.",[])
             modifier_inventaire = input(f"Voulez-vous modifier l'inventaire de {self.dresseur1.nom} ? (1) Oui / (2) Non\n\n-> ")
             if modifier_inventaire == "1":
                 self.modifier_inventaire_pokemon(self.dresseur1, None)
-        if self.dresseur2.pokemon is None:
+        if not self.dresseur1.pokemon:
+            afficher_texte(f"Combat annulé : {self.dresseur1.nom} n'a pas de pokemon.")
+            return
+        if not self.dresseur2.pokemon:
             afficher_texte(f"\n{self.dresseur2.nom} n'a pas de pokemon pour combattre.")
             modifier_inventaire = input(f"Voulez-vous modifier l'inventaire de {self.dresseur2.nom} ? (1) Oui / (2) Non\n\n-> ")
             if modifier_inventaire == "1":
                 self.modifier_inventaire_pokemon(self.dresseur2, None)
+        if not self.dresseur2.pokemon:
+            afficher_texte(f"Combat annulé : {self.dresseur2.nom} n'a pas de pokemon.")
+            return
 
         """ determine l'ordre des dresseurs pour le lancement du combat """
         premier_dresseur = random.choice([self.dresseur1, self.dresseur2])
@@ -163,11 +174,12 @@ class Combat:
             afficher_texte(f"\n{pkm_attaquant.nom} utilise {attaque_choisie.nom} sur {pkm_defenseur.nom} !")
             
             if attaque_choisie.type_attaque == type_poison:
-                for type in pkm_defenseur.types:
-                    if type == "Poison" or type == "Metal":
-                        afficher_texte(f"{pkm_defenseur} ne peut pas etre empoisonné")
-                        break
-                else :
+                if any(
+                    type_pokemon.nom in {"Poison", "Acier"}
+                    for type_pokemon in pkm_defenseur.types
+                ):
+                    afficher_texte(f"{pkm_defenseur} ne peut pas etre empoisonné")
+                else:
                     pkm_defenseur.statut = "empoisonné"
                     afficher_texte(f"{pkm_defenseur} est empoisonné")
 

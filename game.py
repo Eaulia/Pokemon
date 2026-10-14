@@ -29,6 +29,9 @@ class Game:
         #Combat
         self.a.lancer_combat()
 
+        if self.a.dresseur1.tous_ko() or self.a.dresseur2.tous_ko():
+            return
+
         while not self.a.dresseur1.tous_ko() and not self.a.dresseur2.tous_ko() :
             combat_actif = self.a.gestion_tour()
             if not combat_actif:
