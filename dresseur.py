@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pokemon import Pokemon
 from items import items_disponibles
 from decoration import afficher_cadre
@@ -73,7 +75,7 @@ class Dresseur:
     "2) Retirer un objet",
     "3) Afficher l'inventaire"
         ])
-        choix = int(input("-> "))
+        choix = input("-> ")
 
         if choix == "1":
             print("\nObjets disponibles :")

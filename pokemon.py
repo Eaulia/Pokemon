@@ -16,6 +16,8 @@ COMMENTAIRES :
 : str | None signifie que la variable peut etre un str ou un None
 ----------------------------------------------------
 """
+from __future__ import annotations
+
 
 from exceptions import *
 from decoration import afficher_texte
