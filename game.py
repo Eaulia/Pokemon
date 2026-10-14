@@ -4,12 +4,14 @@ COMBAT.PY - Combat et Logique de combat
 ~~~~~~~~~~~~~~~~~~~~~~
 A CONTINUER : 
 - Inventaire du menu principal
+COMMENTAIRES : tkt les couleurs c'est la folie quand t'es fatigué 
 ----------------------------------------------------
 """
 
 from combat import Combat
-from pokemon import Lixy, Pikachu, Smogo
+from pokemon import Lixy, Pikachu, Smogo, Bulbizarre
 from dresseur import Dresseur
+from decoration import afficher_texte, Couleurs, afficher_cadre
 
 class Game:
     def __init__(self):
@@ -33,18 +35,35 @@ class Game:
                 break
 
         if self.a.dresseur1.tous_ko():
-            print(f"\nVictoire pour {self.a.dresseur2.nom} !")
+            afficher_texte(f"\nVictoire pour {self.a.dresseur2.nom} !")
+            print("\n┗━━━━                                                              ━━━━┛")
+
         elif self.a.dresseur2.tous_ko():
-            print(f"\nVictoire pour {self.a.dresseur1.nom} !")
+            afficher_texte(f"\nVictoire pour {self.a.dresseur1.nom} !")
+            print("\n┗━━━━                                                              ━━━━┛")
 
     def menu_principal(self):
         """ affiche le menu principal """
-        while True:
-            print("\n=== POKÉMON ===")
-            print("1) Lancer un combat")
-            print("2) Gérer les pokémons")
-            print("3) Gérer l'inventaire")
-            print("4) Quitter")
+        while True:   
+            print("┏━━━━                                                              ━━━━┓")
+            print("""
+            
+     ██████╗  ██████╗ ██╗  ██╗███████╗███╗   ███╗ ██████╗ ██╗   ██╗
+     ██╔══██╗██╔═══██╗██║ ██╔╝██╔════╝████╗ ████║██╔═══██╗███╗  ██║
+     ██████╔╝██║   ██║█████═╝ █████╗  ██╔████╔██║██║   ██║██╔██╗██║
+     ██╔═══╝ ██║   ██║██╔═██╗ ██╔══╝  ██║╚██╔╝██║██║   ██║██║╚████║
+     ██║     ╚██████╔╝██║  ██╗███████╗██║ ╚═╝ ██║╚██████╔╝██║ ╚███║
+     ╚═╝      ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚══╝
+
+""")
+            print(f"                       {Couleurs.GRIS}par Quentin et Viviane{Couleurs.RESET}\n")
+            afficher_cadre("MENU PRINCIPAL", [
+                "   1) Lancer un combat",
+                "   2) Gérer les pokémons",
+                "   3) Gérer l'inventaire",
+                "   4) Quitter"
+            ])
+            
             choix = input("-> ")
 
             if choix == "1":
@@ -52,9 +71,12 @@ class Game:
             elif choix == "2":
                 self.a.modifier_inventaire_pokemon(self.a.dresseur1, Lixy)
                 self.a.modifier_inventaire_pokemon(self.a.dresseur2, Pikachu)
+                print("\n┗━━━━                                                              ━━━━┛")
             elif choix == "3":
                 Dresseur.modifier_inventaire_item(self.a.dresseur1)
                 Dresseur.modifier_inventaire_item(self.a.dresseur2)
+                print("\n┗━━━━                                                              ━━━━┛")
             elif choix == "4":
-                print("A jamaiiiis !! ;D")
+                print("A jamaiiiis !! ;D\n")
+                print("\n┗━━━━                                                              ━━━━┛")
                 break

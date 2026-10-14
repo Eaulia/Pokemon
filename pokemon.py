@@ -10,6 +10,7 @@ dans la classe Pokemon
 - Competences acquerissables selon le nv
 - evolution par pierre d'evo (boutique ou fin ce combat) ou par niveau
 - EV IV (cf. pokepedia)
+- accumulation des statuts
 ~~~~~~~~~~~~~~~~~~~~~~
 COMMENTAIRES :
 : str | None signifie que la variable peut etre un str ou un None
@@ -17,6 +18,7 @@ COMMENTAIRES :
 """
 
 from exceptions import *
+from decoration import afficher_texte
 
 class Type:
     def __init__(self, nom:str, faiblesse : list | None = None, resistance : list | None = None):
@@ -48,13 +50,14 @@ class Attaque:
 
 
 class Pokemon:
-    def __init__(self, nom: str, pv_max: int, type1: Type, type2=None):
+    def __init__(self, nom: str, pv_max: int, type1: Type, type2=None, niveau:int=1):
         self.nom = nom
+        self.niveau = niveau
+        pv_max = int((pv_max*2*self.niveau)/100+self.niveau+10)
         self.__pv = pv_max  # pv actuels du pokemon
         self.__pv_max = pv_max
         self.pv_max_base = pv_max # pour l'xp et lvl up
         self.xp = 0
-        self.niveau = 1
 
         self.attaques = []  # Liste d'objets Attaque (max 4)
         self.item = []
@@ -177,7 +180,7 @@ class Pokemon:
     def gagner_xp(self, xp: int):
         """ Ajoute de l'XP et gère la montée de niveau """
         self.xp += xp
-        print(f"{self.nom} gagne {xp} XP !")
+        afficher_texte(f"{self.nom} gagne {xp} XP !")
 
         # verifier si le Pokémon monte de niveau, max 10.
         while self.xp >= self.xp_requis_prochain_niveau() and self.niveau < 10:
@@ -209,10 +212,10 @@ class Pokemon:
                 attaque.degats_base = attaque.degats  # Sauvegarder les dégâts de base
             attaque.degats = int(attaque.degats_base * (1 + 0.05 * (self.niveau - 1)))
 
-        print(f"\n{self.nom} monte au niveau {self.niveau} !")
-        print(f"PV max : {ancien_pv_max} → {self.__pv_max} (+{difference_pv})")
+        afficher_texte(f"\n{self.nom} monte au niveau {self.niveau} !")
+        afficher_texte(f"PV max : {ancien_pv_max} → {self.__pv_max} (+{difference_pv})")
         if self.attaques:
-            print(f"Dégâts des attaques augmentés de 5% !")
+            afficher_texte(f"Dégâts des attaques augmentés de 5% !")
 
         # afficher l'XP restante
         if self.xp >= self.xp_requis_prochain_niveau() and self.niveau < 10:
@@ -231,6 +234,11 @@ class Pokemon:
             degats_poison = int(self.get_pv_max() * 1/8)  # 12% des PV max
             self.prendre_degats(degats_poison)
             print(f"{self.nom} est empoisonné, il perd {degats_poison} PV ! D/")
+
+    def appliquer_baisse_atk(self):
+        if self.statut == "atk baissé":
+            pass
+            print(f"L'attaque de {self.nom} à baissé de x ! D/")
         
 
 # exemple d'utilisation pour obtenir le type d'un pokemon 
@@ -238,6 +246,7 @@ class Pokemon:
 charge = Attaque("Charge", 40, type_normal, 100)
 vive_attaque = Attaque("Vive-Attaque", 40, type_normal, 100)
 griffe = Attaque("Griffe", 40, type_normal, 100)
+rugissement =  Attaque("Rugissement", 0, type_normal, 100)
 
 # Attaques Électrik
 eclair = Attaque("Éclair", 40, type_electrik, 100)
@@ -247,9 +256,10 @@ cage_eclair = Attaque("Cage-Éclair", 50, type_electrik, 90)
 
 # Attaques Poison
 gaz_toxik = Attaque("Gaz_toxik", 0, type_poison, 90)
+poudre_toxik = Attaque("Poudre_toxik", 0, type_poison, 75)
 
 # Lixy (Électrik)
-Lixy = Pokemon("Lixy", 60, type_electrik)
+Lixy = Pokemon("Lixy", 60, type_electrik, niveau=5)
 Lixy.apprendre_attaque(charge)
 Lixy.apprendre_attaque(etincelle)
 Lixy.apprendre_attaque(eclair)
@@ -266,4 +276,10 @@ Smogo = Pokemon("Smogo", 40, type_poison)
 Smogo.apprendre_attaque(charge)
 Smogo.apprendre_attaque(gaz_toxik)
 
-pokemondispo = [Lixy, Pikachu, Smogo]
+# Bulbizarre (Plante)
+Bulbizarre = Pokemon("Bulbizarre", 45, type_plante)
+Bulbizarre.apprendre_attaque(charge)
+Bulbizarre.apprendre_attaque(rugissement)
+Bulbizarre.apprendre_attaque(poudre_toxik)
+
+pokemondispo = [Lixy, Pikachu, Smogo, Bulbizarre]

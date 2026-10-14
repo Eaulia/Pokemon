@@ -15,6 +15,7 @@ import random
 from pokemon import pokemondispo, Pokemon, Attaque, type_poison
 from dresseur import Dresseur
 from items import Fraise
+from decoration import barre_de_vie, afficher_texte, afficher_cadre
 from exceptions import PokemonInexistantError
 
 
@@ -29,10 +30,13 @@ class Combat:
 
     def modifier_inventaire_pokemon(self, dresseur, pokemon=None):
         """modifier l'inventaire en boucle"""
-        print(f"\n-- Inventaire de {dresseur.nom}--")
-        choix = input(f"1) Ajouter un pokemon\n2) Retirer un pokemon\n3) Afficher l'inventaire\n-> ")
-        if choix == "1":
-            print(f'pokemons disponibles : {pokemondispo}')
+        afficher_cadre(f"Equipe de {dresseur.nom}", ["1) Ajouter un pokemon", "2) Retirer un pokemon", "3) Afficher l'inventaire"])
+        choix = int(input("-> "))
+
+        if choix == 1:
+            afficher_texte(f'pokemons disponibles :')
+            for pkm in pokemondispo:
+                afficher_texte(f'{pkm}')
             pokemon = input("Quel pokemon voulez-vous ajouter ? (Entrez le nom)\n\n-> ")
             if pokemon not in str(pokemondispo):
                 raise PokemonInexistantError("ce pokemon n'est pas disponible, vérifiez le nom ou ajoutez-le")
@@ -40,8 +44,8 @@ class Combat:
                 if str(pokemon.nom) == pokemon:
                     dresseur.ajouter_pokemon(pokemon)
             
-        elif choix == "2":
-            print(f'Pokemons de {dresseur.nom} : {dresseur.pokemon}')
+        elif choix == 2:
+            afficher_texte(f'Pokemons de {dresseur.nom} : {dresseur.pokemon}')
             pokemon = input("Quel pokemon voulez-vous retirer ? (Entrez le nom)\n\n-> ")
             if pokemon not in str(dresseur.pokemon):
                 raise PokemonInexistantError("tu n'as pas ce pokemon.. ):")
@@ -49,10 +53,10 @@ class Combat:
                 if str(pkm.nom) == pokemon:
                     dresseur.retirer_pokemon(pkm)
 
-        elif choix == "3":
-            print(f"\nInventaire de {dresseur.nom} : {dresseur.pokemon}")
+        elif choix == 3:
+            afficher_texte(f"\nInventaire de {dresseur.nom} : {dresseur.pokemon}")
 
-        print(f"\nTu veux continuer à modifier l'inventaire ?")
+        afficher_texte(f"\nTu veux continuer à modifier l'inventaire ?")
         choixcontinuer= input("\n1) Oui\n2) Non\n\n-> ")
         if choixcontinuer == "1":
             self.modifier_inventaire_pokemon(dresseur, pokemon)
@@ -61,12 +65,12 @@ class Combat:
 
     def lancer_combat(self):
         if self.dresseur1.pokemon is None:
-            print(f"{self.dresseur1.nom} n'a pas de pokemon pour combattre.")
+            afficher_cadre(f"\n{self.dresseur1.nom} n'a pas de pokemon pour combattre.",[])
             modifier_inventaire = input(f"Voulez-vous modifier l'inventaire de {self.dresseur1.nom} ? (1) Oui / (2) Non\n\n-> ")
             if modifier_inventaire == "1":
                 self.modifier_inventaire_pokemon(self.dresseur1, None)
         if self.dresseur2.pokemon is None:
-            print(f"{self.dresseur2.nom} n'a pas de pokemon pour combattre.")
+            afficher_texte(f"\n{self.dresseur2.nom} n'a pas de pokemon pour combattre.")
             modifier_inventaire = input(f"Voulez-vous modifier l'inventaire de {self.dresseur2.nom} ? (1) Oui / (2) Non\n\n-> ")
             if modifier_inventaire == "1":
                 self.modifier_inventaire_pokemon(self.dresseur2, None)
@@ -79,22 +83,30 @@ class Combat:
 
         """ Chaque dresseur doit avoir un pokemon actif avant de commencer le combat """
         if self.dresseur_actif.pokemon_actif is None:
-            print(f"{self.dresseur_actif.nom} n'a pas de pokemon actif pour combattre.")
-            print(f"-- Pokemons de {self.dresseur_actif.nom} --")
+            lignes_pokemons = [f"{self.dresseur_actif.nom} n'a pas de pokémon actif."]
+            lignes_pokemons.append("")
+            
             for i, pkm in enumerate(self.dresseur_actif.pokemon, 1):
-                print(f"{i}) {pkm}")
-            choisir_pokemon = int(input(f"choisissez un pokemon (avec son numéro attribué) parmi vos pokemons\n\n-> "))
+                lignes_pokemons.append(f"{i}) {pkm}")
+            
+            afficher_cadre(f"Pokemons de {self.dresseur_actif.nom}", lignes_pokemons)
+            afficher_texte("choisissez un pokemon (avec son numéro attribué) parmi vos pokemons")
+            choisir_pokemon = int(input(f"-> "))
             if 1 <= choisir_pokemon <= len(self.dresseur_actif.pokemon):
                 self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon - 1]
             else:
                 print("Numéro invalide, réessayez.")
 
         if self.dresseur_suivant.pokemon_actif is None:
-            print(f"{self.dresseur_suivant.nom} n'a pas de pokemon actif pour combattre.")
-            print(f"-- Pokemons de {self.dresseur_suivant.nom} --")
+            lignes_pokemons = [f"{self.dresseur_suivant.nom} n'a pas de pokémon actif."]
+            lignes_pokemons.append("")
+            
             for i, pkm in enumerate(self.dresseur_suivant.pokemon, 1):
-                print(f"{i}) {pkm}")
-            choisir_pokemon2 = int(input(f"choisissez un pokemon (avec son numéro attribué) parmi vos pokemons\n\n-> "))
+                lignes_pokemons.append(f"{i}) {pkm}")
+
+            afficher_cadre(f"Pokemons de {self.dresseur_suivant.nom}", lignes_pokemons)
+            afficher_texte("choisissez un pokemon (avec son numéro attribué) parmi vos pokemons")
+            choisir_pokemon2 = int(input(f"-> "))
             if 1 <= choisir_pokemon2 <= len(self.dresseur_suivant.pokemon):
                 self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choisir_pokemon2 - 1]
             else:
@@ -116,27 +128,29 @@ class Combat:
         """ gestion de l'attaque du pokemon adverse """
         degats_finaux = 0
         if self.dresseur_actif is None or self.dresseur_suivant is None:
-            print(" Aucun combat actif ")
+            afficher_texte(" Aucun combat actif ")
             return
 
         pkm_attaquant:Pokemon|None = self.dresseur_actif.pokemon_actif
         pkm_defenseur:Pokemon|None = self.dresseur_suivant.pokemon_actif
 
         if pkm_attaquant is None or pkm_defenseur is None:
-            print("pas de pokemon attaquant ou defenseur")
+            afficher_texte("pas de pokemon attaquant ou defenseur")
             return
 
         # Vérifier que le Pokémon a des attaques
         if not pkm_attaquant.attaques:
-            print(f"{pkm_attaquant.nom} ne connaît aucune attaque !")
+            afficher_texte(f"{pkm_attaquant.nom} ne connaît aucune attaque !")
             return
 
-        print(f"\n-- Attaques de {pkm_attaquant.nom} --")
+        lignes_attaques = []
         for i, atk in enumerate(pkm_attaquant.attaques, 1):
             degats = self.calculer_degats(pkm_attaquant, pkm_defenseur, atk)
-            print(f"{i}) {atk.nom} ({degats} dégâts, Type: {atk.type_attaque.nom})")
+            lignes_attaques.append(f"{i}) {atk.nom} ({degats} dégâts, Type: {atk.type_attaque.nom})")
 
-        choix = int(input("Choisissez une attaque (numéro) : ")) - 1
+        # Affichage propre dans le cadre
+        afficher_cadre(f"Attaques de {pkm_attaquant.nom}", lignes_attaques)
+        choix = int(input("Choisissez une attaque (numéro) -> ")) - 1
 
         if 0 <= choix < len(pkm_attaquant.attaques):
             attaque_choisie:Attaque|None = pkm_attaquant.attaques[choix]
@@ -146,21 +160,28 @@ class Combat:
             degats_finaux = self.calculer_degats(pkm_attaquant, pkm_defenseur, attaque_choisie)
 
             pkm_defenseur.prendre_degats(degats_finaux)
-            print(f"\n{pkm_attaquant.nom} utilise {attaque_choisie.nom} sur {pkm_defenseur.nom} !")
+            afficher_texte(f"\n{pkm_attaquant.nom} utilise {attaque_choisie.nom} sur {pkm_defenseur.nom} !")
             
             if attaque_choisie.type_attaque == type_poison:
-                pkm_defenseur.statut = "empoisonné"
-                print(f"{pkm_defenseur} est empoisonné")
+                for type in pkm_defenseur.types:
+                    if type == "Poison" or type == "Metal":
+                        afficher_texte(f"{pkm_defenseur} ne peut pas etre empoisonné")
+                        break
+                else :
+                    pkm_defenseur.statut = "empoisonné"
+                    afficher_texte(f"{pkm_defenseur} est empoisonné")
 
+            mult = pkm_defenseur.nb_degats_recus(attaque_choisie.type_attaque.nom)
+            
             if mult > 1.0:
-                print(random.choice(["Wooooow t'es trop chaud !", "C'est quoi cette attaque de fou là!"]))
+                afficher_texte(random.choice(["Wooooow t'es trop chaud !", "C'est quoi cette attaque de fou là!"]))
             elif mult < 1.0:
-                print(random.choice(["Pas fou, pas fou...", "Keske tu fais ???", "T'es pas sauvable toi-", "mouais.."]))
+                afficher_texte(random.choice(["Pas fou, pas fou...", "Keske tu fais ???", "T'es pas sauvable toi-", "mouais.."]))
 
-            print(f"{self.dresseur_actif.nom} attaque {self.dresseur_suivant.nom} avec son {self.dresseur_actif.pokemon_actif} !")
-            print(f"{pkm_defenseur.nom} subit {degats_finaux} dégâts. (PV de {pkm_defenseur.nom}: {pkm_defenseur.get_pv()}/{pkm_defenseur.get_pv_max()})")
+            afficher_texte(f"{self.dresseur_actif.nom} attaque {self.dresseur_suivant.nom} avec son {self.dresseur_actif.pokemon_actif} !")
+            afficher_texte(f"{pkm_defenseur.nom} subit {degats_finaux} dégâts. (PV de {pkm_defenseur.nom}: {pkm_defenseur.get_pv()}/{pkm_defenseur.get_pv_max()})")
         else:
-            print("Choix invalide !")
+            afficher_texte("Choix invalide !")
         return degats_finaux
 
         
@@ -168,33 +189,39 @@ class Combat:
         """ gere le gameplay d'un tour pendant un combat """
         
         if self.dresseur_actif is None or self.dresseur_suivant is None:
-            print(" Aucun dresseur actif ")
+            afficher_texte(" Aucun dresseur actif ")
             return
 
         pkm_actif:Pokemon|None = self.dresseur_actif.pokemon_actif
         pkm_adversaire:Pokemon|None = self.dresseur_suivant.pokemon_actif
 
         if pkm_actif is None or pkm_adversaire is None:
-            print(" Aucun pokemon actif ")
+            afficher_texte(" Aucun pokemon actif ")
             return
-
-        print(f"\n\n======== TOUR {self.tour} =========")
-        print(f"A {self.dresseur_actif.nom} de jouer")
 
         if pkm_actif.statut == "empoisonné":
             pkm_actif.appliquer_poison()
-        print(f"Pokémon actif : {pkm_actif.nom} ({pkm_actif.get_pv()}/{pkm_actif.get_pv_max()} PV)")
-        print(f"Adversaire : {pkm_adversaire.nom} ({pkm_adversaire.get_pv()}/{pkm_adversaire.get_pv_max()} PV)")
+            
+        afficher_texte(f"\n    Pokémon actif : {pkm_actif.nom} ({pkm_actif.get_pv()}/{pkm_actif.get_pv_max()} PV)")
+        afficher_texte(f"    {barre_de_vie(pkm_actif.get_pv(), pkm_actif.get_pv_max())}\n")
+        afficher_texte(f"    Adversaire : {pkm_adversaire.nom} ({pkm_adversaire.get_pv()}/{pkm_adversaire.get_pv_max()} PV)")
+        afficher_texte(f"    {barre_de_vie(pkm_adversaire.get_pv(), pkm_adversaire.get_pv_max())}\n")
 
-        choix = input(f"\n1) Attaquer\n2) Utiliser un objet\n3) Changer de pokemon\n\n-> ")
+        afficher_cadre(f"TOUR {self.tour} - A {self.dresseur_actif.nom} de jouer", [
+            "1) Attaquer",
+            "2) Utiliser un objet",
+            "3) Changer de pokemon"
+        ])
+        choix = input("-> ")
+
         if choix == "1":
             self.attaquer()
 
         if choix == "2":
             if not self.dresseur_actif.objets:
-                print("ouais, nan ton tour a servi à rien bahhaha")
+                afficher_texte("ouais, nan ton tour a servi à rien bahhaha")
             else:
-                print("\n-- Objets disponibles --")
+                afficher_texte("\n-- Objets disponibles --")
                 self.dresseur_actif.afficher_objets()
 
                 try:
@@ -205,7 +232,7 @@ class Combat:
                         # Si c'est un ItemSoin ou ItemRevive, l'utiliser
                         if hasattr(objet, 'utiliser'):
                             # Choisir sur quel Pokémon utiliser l'objet
-                            print("\n-- Choisissez un Pokémon --")
+                            afficher_texte("\n-- Choisissez un Pokémon --")
                             self.dresseur_actif.afficher_pokemons()
                             choix_pkm = int(input("Sur quel Pokémon ? (numéro) : ")) - 1
 
@@ -216,44 +243,49 @@ class Combat:
                                 if objet.utiliser(pokemon_cible):
                                     self.dresseur_actif.retirer_objet(objet)
                                 else:
-                                    print("L'objet n'a pas pu être utilisé.")
+                                    afficher_texte("L'objet n'a pas pu être utilisé.")
                             else:
-                                print("Choix invalide")
+                                afficher_texte("Choix invalide")
                         else:
-                            print("Cet objet ne peut pas être utilisé en combat.")
+                            afficher_texte("Cet objet ne peut pas être utilisé en combat.")
                     else:
-                        print("Choix invalide")
+                        afficher_texte("Choix invalide")
 
                 except ValueError:
-                    print("Entrée invalide")
+                    afficher_texte("Entrée invalide")
 
 
         if choix == "3":
             choisir_pokemon = int(input(f"choisissez un pokemon (avec son numéro attribué) parmi vos pokemons :\n->"))
-            print(self.dresseur_actif.afficher_pokemons())
+            afficher_texte(self.dresseur_actif.afficher_pokemons())
             self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon - 1]
 
         if pkm_adversaire.est_ko():
-            print(f"\n{pkm_adversaire.nom} est KO !")
+            afficher_texte(f"\n{pkm_adversaire.nom} est KO !")
 
             # Gain d'xp
             xp_gagnee = 50 * pkm_adversaire.niveau
             pkm_actif.gagner_xp(xp_gagnee)
 
             if self.dresseur_suivant.tous_ko():
-                print(f"gg {self.dresseur_actif.nom} !")
+                afficher_texte(f"gg {self.dresseur_actif.nom} !")
                 return False  # stop la boucle while
             else:
                 # Force l'adversaire à choisir un autre Pokémon
-                print(f"\n{self.dresseur_suivant.nom}, choisissez un autre Pokémon !")
-                self.dresseur_suivant.afficher_pokemons()
-                choix_nouveau = int(input("Quel Pokémon envoyer ? (numéro) : ")) - 1
+                lignes_ko = []
+                for i, pkm in enumerate(self.dresseur_suivant.pokemon, 1):
+                    statut_pkm = " (KO)" if pkm.est_ko() else f" ({pkm.get_pv()}/{pkm.get_pv_max()} PV)"
+                    lignes_ko.append(f"{i}) {pkm.nom} Nv.{pkm.niveau}{statut_pkm}")
+
+                afficher_cadre(f"Remplacement - {self.dresseur_suivant.nom}", lignes_ko)
+                
+                choix_nouveau = int(input("Quel Pokémon envoyer ? (numéro) -> ")) - 1
                 if 0 <= choix_nouveau < len(self.dresseur_suivant.pokemon):
                     self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choix_nouveau]
-                    print(f"{self.dresseur_suivant.nom} envoie {self.dresseur_suivant.pokemon_actif.nom} !")
-
+                    afficher_texte(f"{self.dresseur_suivant.nom} envoie {self.dresseur_suivant.pokemon_actif.nom} !")
 
         # 2. Alternance des dresseurs pour le tour suivant
         self.dresseur_actif, self.dresseur_suivant = self.dresseur_suivant, self.dresseur_actif
         self.tour += 1
         return True  # Maintient la boucle active
+        

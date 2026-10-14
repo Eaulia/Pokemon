@@ -1,5 +1,6 @@
 from pokemon import Pokemon
 from items import items_disponibles
+from decoration import afficher_cadre
 
 class Dresseur:
     def __init__(self, nom:str="Dresseur"):
@@ -67,9 +68,13 @@ class Dresseur:
 
     def modifier_inventaire_item(self):
         """gère l'ajout, le retrait et l'affichage des objets du dresseur"""
-        print(f"\n-- Inventaire d'objets de {self.nom} --")
-        choix = input("1) Ajouter un objet\n2) Retirer un objet\n3) Afficher l'inventaire\n-> ")
-        
+        afficher_cadre(f"Inventaire de {self.nom}", [
+    "1) Ajouter un objet",
+    "2) Retirer un objet",
+    "3) Afficher l'inventaire"
+        ])
+        choix = int(input("-> "))
+
         if choix == "1":
             print("\nObjets disponibles :")
             for i, item in enumerate(items_disponibles, 1):
