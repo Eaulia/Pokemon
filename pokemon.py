@@ -2,67 +2,26 @@
 ----------------------------------------------------
 POKEMON.PY - Pokemons et Dresseurs
 ~~~~~~~~~~~~~~~~~~~~~~
-FAITS :
-dans la classe Type
-- Avoir 1 ou 2 types par Pokemon
-- Type Electrique
-dans la classe Pokemon
-- afficher les types
-- calculer les degats reçus
-dans la classe Dresseur
-- Ajouter un pokemon 
-- Ajouter et retirer un objet 
-- Afficher l'inventaire
-~~~~~~~~~~~~~~~~~~~~~~
 A CONTINUER : 
 dans la classe Pokemon
-- Differentes attaques des pokemons 
-- Utilisation des objets 
 - Systeme de PV avec variables privées
 - niveau, hp qui augmente 
-- empoisonnement 
-- heritage 
+- Systeme niveau
+- Competences acquerissables selon le nv
+- evolution par pierre d'evo (boutique ou fin ce combat) ou par niveau
+- EV IV (cf. pokepedia)
+- accumulation des statuts
 ~~~~~~~~~~~~~~~~~~~~~~
 COMMENTAIRES :
+: str | None signifie que la variable peut etre un str ou un None
 ----------------------------------------------------
 """
 
 from exceptions import *
-
-# Chaque points faibles et forts pour chaque type de pokemon selon le lore
-types_pokemon = {
-    "Feu": {
-        "faiblesse": ["Eau", "Sol", "Roche"],
-        "resistance": ["Feu", "Plante", "Glace", "Insecte", "Acier"]
-    },
-    "Eau": {
-        "faiblesse": ["Plante", "Électrik"],
-        "resistance": ["Feu", "Eau", "Glace"]
-    },
-    "Plante": {
-        "faiblesse": ["Feu", "Glace", "Poison", "Vol", "Insecte"],
-        "resistance": ["Eau", "Plante", "Sol", "Roche"]
-    },
-    "Électrik": {
-        "faiblesse": ["Sol"],
-        "resistance": ["Électrik", "Vol", "Acier"]
-    },
-    "Vol": {
-        "faiblesse": ["Électrik", "Glace", "Roche"],
-        "resistance": ["Plante", "Combat", "Insecte"]
-    },
-    "Sol": {
-        "faiblesse": ["Eau", "Plante", "Glace"],
-        "resistance": ["Poison", "Roche"]
-    },
-    "Roche": {
-        "faiblesse": ["Eau", "Plante", "Combat", "Sol", "Acier"],
-        "resistance": ["Feu", "Poison", "Normal", "Vol"]
-    }
-}
+from decoration import afficher_texte
 
 class Type:
-    def __init__(self, nom:str, faiblesse = None, resistance = None):
+    def __init__(self, nom:str, faiblesse : list | None = None, resistance : list | None = None):
         self.nom = nom
         self.faiblesse = faiblesse
         self.resistance = resistance
@@ -70,30 +29,52 @@ class Type:
 #que regarder la cote "defender"
 #mettre dans faiblesse si marqué 2
 #dans resistance si marqué 1/2 (cf energie.png)
-type_electrique = Type("Electrique", faiblesse=[], resistance=["Electrique"])
+# Chaque points faibles et forts pour chaque type de pokemon selon le lore
+type_normal = Type("Normal", faiblesse=[], resistance=[])
+type_feu = Type("Feu", faiblesse=["Eau", "Sol", "Roche"], resistance=["Feu", "Plante", "Glace", "Insecte", "Acier"])
+type_eau = Type("Eau", faiblesse=["Plante", "Électrik"], resistance=["Feu", "Eau", "Glace"])
+type_plante = Type("Plante", faiblesse=["Feu", "Glace", "Poison", "Vol", "Insecte"], resistance=["Eau", "Plante", "Sol", "Roche"])
+type_electrik = Type("Électrik", faiblesse=["Sol"], resistance=["Électrik", "Vol", "Acier"])
+type_vol = Type("Vol", faiblesse=["Électrik", "Glace", "Roche"], resistance=["Plante", "Combat", "Insecte"])
+type_sol = Type("Sol", faiblesse=["Eau", "Plante", "Glace"], resistance=["Poison", "Roche"])
+type_roche = Type("Roche", faiblesse=["Eau", "Plante", "Combat", "Sol", "Acier"], resistance=["Feu", "Poison", "Normal", "Vol"])
+type_poison = Type("Poison", faiblesse=["Sol", "Psy"], resistance=["Combat", "Poison", "Plante", "Insecte", "Fée"])
+
+class Attaque:
+    """ sous-classe, attaque qu'un Pokemon peut utiliser"""
+    def __init__(self, nom: str, degats: int, type_attaque: Type, precision: int = 100):
+        self.nom = nom
+        self.degats = degats
+        self.type_attaque = type_attaque  # Type de l'attaque (peut être différent du type du Pokémon)
+        self.precision = precision  # Pourcentage de réussite (à 100 ne rate jms)
+
 
 class Pokemon:
-    def __init__(self, nom:str, pv_max:int, atk1:str, dgt1:int, atk2:str, dgt2:int, type1, atksp = None, dgtsp = None, type2 = None):
+    def __init__(self, nom: str, pv_max: int, type1: Type, type2=None, niveau:int=1):
         self.nom = nom
-        self.__pv = pv_max # pv actuels du pokemon
+        self.niveau = niveau
+        pv_max = int((pv_max*2*self.niveau)/100+self.niveau+10)
+        self.__pv = pv_max  # pv actuels du pokemon
         self.__pv_max = pv_max
+        self.pv_max_base = pv_max # pour l'xp et lvl up
+        self.xp = 0
 
-        self.atk1 = atk1
-        self.dgt1 = dgt1
-        self.atk2 = atk2
-        self.dgt2 = dgt2
-        self.atksp = atksp
-        self.dgtsp = dgtsp
+        self.attaques = []  # Liste d'objets Attaque (max 4)
+        self.item = []
+        self.statut = None
 
         if pv_max <= 0:
-            raise PVInvalideError("Les PV max doivent être supérieurs à 0, faut vrm etre con pour mettre un pv négatif ou nul a son propre pokemon!")
-        
+            raise PVInvalideError("Les PV max doivent être supérieurs à 0, faut vrmt etre con pour mettre un pv négatif ou nul a son propre pokemon!")
+
         self.types = [type1]
         if type2:
             self.types.append(type2)
 
         self.statisque = []
-        self.attaque = []
+
+
+    def __repr__(self):
+        return f"{self.nom} Nv.{self.niveau} (PV: {self.get_pv()}/{self.get_pv_max()})"
 
     # getter et setter pour les attr privés
     def get_pv(self):
@@ -131,15 +112,15 @@ class Pokemon:
 
     def est_faible_contre(self, pokemon):
         """ retourne True si le pokemon est faible contre l'autre pokemon et false si rien """
-        if types_pokemon.get(self.types[0].nom, {}).get("faiblesse"):
-            if pokemon.types[0].nom in types_pokemon[self.types[0].nom]["faiblesse"]:
+        for t in self.types:
+            if t.faiblesse and pokemon.types[0] in t.faiblesse:
                 return True
         return False
 
     def est_resistant_contre(self, pokemon):
         """ retourne True si le pokemon est resistant contre l'autre pokemon et false si rien """
-        if types_pokemon.get(self.types[0].nom, {}).get("resistance"):
-            if pokemon.types[0].nom in types_pokemon[self.types[0].nom]["resistance"]:
+        for t in self.types:
+            if t.resistance and pokemon.types[0].nom in t.resistance:
                 return True
         return False
 
@@ -165,57 +146,140 @@ class Pokemon:
             else:
                 self.set_pv(self.get_pv() + value)
 
-class PokemonAttaque(Pokemon):
-    def __init__(self, nom: str, pv_max: int, atk1: str, dgt1: int, atk2: str, dgt2: int, type1, atksp=None, dgtsp=None, type2=None):
-        super().__init__(nom, pv_max, atk1, dgt1, atk2, dgt2, type1, atksp, dgtsp, type2)
+    def apprendre_attaque(self, attaque: Attaque):
+        """ Permet au Pokémon d'apprendre une nouvelle attaque (max 4) """
+        if len(self.attaques) >= 4:
+            print(f"{self.nom} connaît déjà 4 attaques !")
+            return False
+        self.attaques.append(attaque)
+        return True
+
+    def oublier_attaque(self, index: int):
+        """ Retire une attaque par son index (0-3) """
+        if 0 <= index < len(self.attaques):
+            attaque_oubliee = self.attaques.pop(index)
+            return f"{self.nom} a oublié {attaque_oubliee.nom}"
+        else:
+            raise IndexError("Index d'attaque invalide")
+
+    def afficher_attaques(self):
+        """ Affiche toutes les attaques du Pokémon """
+        if not self.attaques:
+            return f"{self.nom} ne connaît aucune attaque !"
+
+        resultat = f"\n-- Attaques de {self.nom} --\n"
+        for i, atk in enumerate(self.attaques, 1):
+            resultat += f"{i}) {atk.nom} ({atk.degats} dégâts, Type: {atk.type_attaque.nom})\n"
+        return resultat
+
+    def xp_requis_prochain_niveau(self) -> int:
+        """ Calcule l'XP nécessaire pour atteindre le prochain niveau avec f(x) = (x² + 20x + 200) / 2 (fonction travaillée sur geogebra pour avoir un super simulateur de pokemon!) """
+        x = self.niveau
+        return int((x**2 + 20 * x + 200) / 2)
+
+    def gagner_xp(self, xp: int):
+        """ Ajoute de l'XP et gère la montée de niveau """
+        self.xp += xp
+        afficher_texte(f"{self.nom} gagne {xp} XP !")
+
+        # verifier si le Pokémon monte de niveau, max 10.
+        while self.xp >= self.xp_requis_prochain_niveau() and self.niveau < 10:
+            self.monter_niveau()
+
+    def monter_niveau(self):
+        """ Fait monter le Pokémon d'un niveau et augmente ses stats """
+        if self.niveau >= 10:
+            print(f"{self.nom} est déjà au niveau maximum (10) !")
+            return
+
+        # Consommer l'XP nécessaire
+        xp_necessaire = self.xp_requis_prochain_niveau()
+        self.xp -= xp_necessaire
+        self.niveau += 1
+
+        # Calcul des nouvelles stats (+10% PV, +5% dégâts par niveau)
+        ancien_pv_max = self.__pv_max
+        nouveau_pv_max = int(self.pv_max_base * (1 + 0.10 * (self.niveau - 1)))
+
+        # Augmenter les PV max et restaurer la différence
+        difference_pv = nouveau_pv_max - ancien_pv_max
+        self.__pv_max = nouveau_pv_max
+        self.__pv += difference_pv  # Restaure les PV gagnés
+
+        # Augmenter les dégâts de toutes les attaques (+5% par niveau)
+        for attaque in self.attaques:
+            if not hasattr(attaque, 'degats_base'):
+                attaque.degats_base = attaque.degats  # Sauvegarder les dégâts de base
+            attaque.degats = int(attaque.degats_base * (1 + 0.05 * (self.niveau - 1)))
+
+        afficher_texte(f"\n{self.nom} monte au niveau {self.niveau} !")
+        afficher_texte(f"PV max : {ancien_pv_max} → {self.__pv_max} (+{difference_pv})")
+        if self.attaques:
+            afficher_texte(f"Dégâts des attaques augmentés de 5% !")
+
+        # afficher l'XP restante
+        if self.xp >= self.xp_requis_prochain_niveau() and self.niveau < 10:
+            print(f"{self.nom} a encore assez d'XP pour monter !")
+
+    def afficher_infos_niveau(self):
+        """Affiche les informations de niveau et XP"""
+        if self.niveau >= 10:
+            return f"{self.nom} - Niveau {self.niveau} (MAX) - {self.get_pv()}/{self.get_pv_max()} PV"
+        else:
+            xp_requis = self.xp_requis_prochain_niveau()
+            return f"{self.nom} - Niveau {self.niveau} - XP: {self.xp}/{xp_requis} - {self.get_pv()}/{self.get_pv_max()} PV"
+
+    def appliquer_poison(self):
+        if self.statut == "empoisonné":
+            degats_poison = int(self.get_pv_max() * 1/8)  # 12% des PV max
+            self.prendre_degats(degats_poison)
+            print(f"{self.nom} est empoisonné, il perd {degats_poison} PV ! D/")
+
+    def appliquer_baisse_atk(self):
+        if self.statut == "atk baissé":
+            pass
+            print(f"L'attaque de {self.nom} à baissé de x ! D/")
         
 
-class Dresseur:
-    def __init__(self, nom:str="Dresseur"):
-        self.nom = nom
-        self.pokemon = []
-        self.objet = []
-        self.pokemon_actif = None
-
-    def ajouter_pokemon(self, pokemon:Pokemon):
-        """ ajoute pokemon et limite nombre de pokemon à 3 """
-        if len(self.pokemon) < 3:
-            self.pokemon.append(pokemon)
-        else:
-            print("tu ne peux pas avoir plus de pokemon :/")
-
-    def retirer_pokemon(self, pokemon:str):
-        """ retire pokemon """
-        self.pokemon.remove(pokemon)
-        return f'{pokemon} a été retiré'
-
-    def ajouter_objet(self, objet):
-        """ ajoute objet """
-        self.objet.append(objet)
-        return f'{objet} a été ajouté'
-
-    def retirer_objet(self, objet):
-        """ retire objet """
-        self.objet.remove(objet)
-        return f'{objet} a été retiré'
-
-    def afficher_inventaire(self):
-        """ affiche inventaire """
-        return f'INVENTAIRE : {self.objet}'
-
-    def afficher_pokemons(self):
-        """ affiche les pokemons """
-        res = 1
-        for pokemon in self.pokemon:
-            print(f"{res}) {pokemon}")  # sous la forme : 1) Pikachu    2) Ronflex
-            res += 1
-
 # exemple d'utilisation pour obtenir le type d'un pokemon 
-Lixy = Pokemon("Lixy", 60, "atk simple", 10, "atk complexe", 30, type_electrique)
-print(Lixy.afficher_types())
-print(Lixy.nb_degats_recus("Electrique"))
+# Attaques Normal
+charge = Attaque("Charge", 40, type_normal, 100)
+vive_attaque = Attaque("Vive-Attaque", 40, type_normal, 100)
+griffe = Attaque("Griffe", 40, type_normal, 100)
+rugissement =  Attaque("Rugissement", 0, type_normal, 100)
 
-# exemple d'utilisation pour les objets 
-dresseur = Dresseur()
-print(dresseur.ajouter_objet("pomme"))
-print(dresseur.afficher_inventaire())
+# Attaques Électrik
+eclair = Attaque("Éclair", 40, type_electrik, 100)
+etincelle = Attaque("Étincelle", 65, type_electrik, 100)
+tonnerre = Attaque("Tonnerre", 90, type_electrik, 70)
+cage_eclair = Attaque("Cage-Éclair", 50, type_electrik, 90)
+
+# Attaques Poison
+gaz_toxik = Attaque("Gaz_toxik", 0, type_poison, 90)
+poudre_toxik = Attaque("Poudre_toxik", 0, type_poison, 75)
+
+# Lixy (Électrik)
+Lixy = Pokemon("Lixy", 60, type_electrik, niveau=5)
+Lixy.apprendre_attaque(charge)
+Lixy.apprendre_attaque(etincelle)
+Lixy.apprendre_attaque(eclair)
+
+# Pikachu (Électrik)
+Pikachu = Pokemon("Pikachu", 40, type_electrik)
+Pikachu.apprendre_attaque(eclair)
+Pikachu.apprendre_attaque(vive_attaque)
+Pikachu.apprendre_attaque(tonnerre)
+Pikachu.apprendre_attaque(cage_eclair)
+
+# Smogo (Poison)
+Smogo = Pokemon("Smogo", 40, type_poison)
+Smogo.apprendre_attaque(charge)
+Smogo.apprendre_attaque(gaz_toxik)
+
+# Bulbizarre (Plante)
+Bulbizarre = Pokemon("Bulbizarre", 45, type_plante)
+Bulbizarre.apprendre_attaque(charge)
+Bulbizarre.apprendre_attaque(rugissement)
+Bulbizarre.apprendre_attaque(poudre_toxik)
+
+pokemondispo = [Lixy, Pikachu, Smogo, Bulbizarre]
