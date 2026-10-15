@@ -60,6 +60,12 @@ class ItemRevive(ItemConsommable):
         print(f"{pokemon.nom} revient au combat avec {pv_restaures} PV !")
         return True
 
+    def team(self, pokemon):
+        """Réanime un Pokémon KO en fin de combat"""
+        pv_restaures = int(pokemon.get_pv_max() * self.pourcent_pv / 100)
+        pokemon.set_pv(pv_restaures)
+        return True
+
 class ItemBoost(ItemConsommable):
     """Items qui boostent temporairement les stats"""
     def __init__(self, nom: str, type_boost: str, valeur: int, description: str = "") -> None:

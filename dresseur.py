@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pokemon import Pokemon
-from items import items_disponibles
+from items import items_disponibles, rappel_max
 from decoration import afficher_cadre
 
 class Dresseur:
@@ -16,12 +16,23 @@ class Dresseur:
         if not self.pokemon:
             return True
         return all(pkm.est_ko() for pkm in self.pokemon)
+
+    def nb_vivants_restants(self):
+        """affiche quantité de pokemon encore vivants"""
+        l = self.pokemon
+        for pkm in self.pokemon:
+            if pkm.est_ko():
+                l.remove(pkm)
+        return len(self.pokemon)
     
     def ajouter_pokemon(self, pokemon:Pokemon, pokemon2:Pokemon|None = None, pokemon3:Pokemon|None = None):
         """ ajoute pokemon et limite nombre de pokemon à 3 """
         liste = [pokemon, pokemon2, pokemon3]
         for pkm in liste:
             if pkm is not None:
+                if pokemon in self.pokemon:
+                    print(f"{pokemon.nom} est déjà dans l'équipe !")
+                    return False
                 if len(self.pokemon) < 3:
                     self.pokemon.append(pkm)
                 else:
@@ -50,7 +61,7 @@ class Dresseur:
         """ affiche les pokemons """
         if not self.pokemon:
             print("Aucun pokémon disponible.")
-            return
+            return 
         
         res = 1
         for pokemon in self.pokemon:
@@ -116,3 +127,8 @@ class Dresseur:
         choixcontinuer = input("\nTu veux continuer à modifier l'inventaire d'objets ?\n1) Oui\n2) Non\n\n-> ")
         if choixcontinuer == "1":
             self.modifier_inventaire_item()
+
+    def soigner_equipe(self):
+        """Soigne tous les pokémons de l'équipe au max"""
+        for pkm in self.pokemon:
+            rappel_max.team(pkm)

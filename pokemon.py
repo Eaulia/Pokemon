@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from exceptions import *
 from decoration import afficher_texte
+import random
 
 class Type:
     def __init__(self, nom:str, faiblesse : list | None = None, resistance : list | None = None):
@@ -52,10 +53,12 @@ class Attaque:
 
 
 class Pokemon:
-    def __init__(self, nom: str, pv_max: int, type1: Type, type2=None, niveau:int=1):
+    def __init__(self, nom: str, pv_max: int, type1: Type, type2=None, niveau:int=1, vitesse:int=50):
         self.nom = nom
         self.niveau = niveau
-        pv_max = int((pv_max*2*self.niveau)/100+self.niveau+10)
+        self.vitesse = vitesse + (self.niveau * 2)
+        self.iv_pv = random.randint(0, 31)
+        pv_max = int(((pv_max+self.iv_pv)*2*self.niveau)/100+self.niveau+10)
         self.__pv = pv_max  # pv actuels du pokemon
         self.__pv_max = pv_max
         self.pv_max_base = pv_max # pour l'xp et lvl up
@@ -181,17 +184,19 @@ class Pokemon:
 
     def gagner_xp(self, xp: int):
         """ Ajoute de l'XP et gère la montée de niveau """
+        if self.niveau >= 50:
+            return "ton niveau est déja maximal"
         self.xp += xp
         afficher_texte(f"{self.nom} gagne {xp} XP !")
 
         # verifier si le Pokémon monte de niveau, max 10.
-        while self.xp >= self.xp_requis_prochain_niveau() and self.niveau < 10:
+        while self.xp >= self.xp_requis_prochain_niveau():
             self.monter_niveau()
 
     def monter_niveau(self):
         """ Fait monter le Pokémon d'un niveau et augmente ses stats """
-        if self.niveau >= 10:
-            print(f"{self.nom} est déjà au niveau maximum (10) !")
+        if self.niveau >= 50:
+            print(f"{self.nom} est déjà au niveau maximum (50) !")
             return
 
         # Consommer l'XP nécessaire
@@ -235,12 +240,28 @@ class Pokemon:
         if self.statut == "empoisonné":
             degats_poison = int(self.get_pv_max() * 1/8)  # 12% des PV max
             self.prendre_degats(degats_poison)
-            print(f"{self.nom} est empoisonné, il perd {degats_poison} PV ! D/")
+            afficher_texte(f"{self.nom} est empoisonné, il perd {degats_poison} PV ! D/")
 
-    def appliquer_baisse_atk(self):
+    def appliquer_baisse_atk(self, x):
         if self.statut == "atk baissé":
-            pass
-            print(f"L'attaque de {self.nom} à baissé de x ! D/")
+            print(f"L'attaque de {self.nom} à baissé de {x} ! D/")
+
+    def appliquer_confusion(self):
+        if self.statut == "confus":
+            print(f"{self.nom} est confus..")
+            # 50% de chance de se blesser lui meme
+            if random.random() < 0.5:
+                degats_confusion = int(self.get_pv_max() * 1/12)
+                self.prendre_degats(degats_confusion)
+                afficher_texte(f"Il est tellement confus qu'il se blesse lui-même et perd {degats_confusion} PV ! ):")
+                return False
+        return True
+
+    def appliquer_brulure(self):
+        if self.statut == "brûlé":
+            degats_feu = int(self.get_pv_max() * 1/8)  # 12% des PV max
+            self.prendre_degats(degats_feu)
+            print(f"{self.nom} brûle, il perd {degats_feu} PV ! D/")
         
 
 # exemple d'utilisation pour obtenir le type d'un pokemon 
@@ -249,6 +270,8 @@ charge = Attaque("Charge", 40, type_normal, 100)
 vive_attaque = Attaque("Vive-Attaque", 40, type_normal, 100)
 griffe = Attaque("Griffe", 40, type_normal, 100)
 rugissement =  Attaque("Rugissement", 0, type_normal, 100)
+ultrason = Attaque("Ultrason", 0, type_normal, 55)
+brouillard = Attaque("Brouillard", 0, type_normal, 100)
 
 # Attaques Électrik
 eclair = Attaque("Éclair", 40, type_electrik, 100)
@@ -259,29 +282,45 @@ cage_eclair = Attaque("Cage-Éclair", 50, type_electrik, 90)
 # Attaques Poison
 gaz_toxik = Attaque("Gaz_toxik", 0, type_poison, 90)
 poudre_toxik = Attaque("Poudre_toxik", 0, type_poison, 75)
+puredpois = Attaque("Purédpois", 30, type_poison, 70)
+
+# Attaques Plante
+vole_vie = Attaque("Vole-Vie", 20, type_plante, 100)
+
+# Attaques Vol
+tornade = Attaque("Tornade", 40, type_vol, 100)
+
 
 # Lixy (Électrik)
-Lixy = Pokemon("Lixy", 60, type_electrik, niveau=5)
+Lixy = Pokemon("Lixy", 60, type_electrik, niveau=1)
 Lixy.apprendre_attaque(charge)
 Lixy.apprendre_attaque(etincelle)
 Lixy.apprendre_attaque(eclair)
 
 # Pikachu (Électrik)
-Pikachu = Pokemon("Pikachu", 40, type_electrik)
+Pikachu = Pokemon("Pikachu", 40, type_electrik, niveau=1)
 Pikachu.apprendre_attaque(eclair)
 Pikachu.apprendre_attaque(vive_attaque)
 Pikachu.apprendre_attaque(tonnerre)
 Pikachu.apprendre_attaque(cage_eclair)
 
 # Smogo (Poison)
-Smogo = Pokemon("Smogo", 40, type_poison)
+Smogo = Pokemon("Smogo", 40, type_poison, niveau=1)
 Smogo.apprendre_attaque(charge)
 Smogo.apprendre_attaque(gaz_toxik)
+Smogo.apprendre_attaque(puredpois)
+Smogo.apprendre_attaque(brouillard)
 
 # Bulbizarre (Plante)
-Bulbizarre = Pokemon("Bulbizarre", 45, type_plante)
+Bulbizarre = Pokemon("Bulbizarre", 45, type_plante, niveau=1)
 Bulbizarre.apprendre_attaque(charge)
 Bulbizarre.apprendre_attaque(rugissement)
 Bulbizarre.apprendre_attaque(poudre_toxik)
 
-pokemondispo = [Lixy, Pikachu, Smogo, Bulbizarre]
+# Nosferapti (Poison, Vol)
+Nosferapti = Pokemon("Nosferapti", 40, type_plante, type2=type_vol ,niveau=1)
+Nosferapti.apprendre_attaque(tornade)
+Nosferapti.apprendre_attaque(ultrason)
+Nosferapti.apprendre_attaque(vole_vie)
+
+pokemondispo = [Lixy, Pikachu, Smogo, Bulbizarre, Nosferapti]

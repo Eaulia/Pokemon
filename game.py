@@ -9,7 +9,7 @@ COMMENTAIRES : tkt les couleurs c'est la folie quand t'es fatigué
 """
 
 from combat import Combat
-from pokemon import Lixy, Pikachu, Smogo, Bulbizarre
+from pokemon import Lixy, Pikachu, Smogo, Bulbizarre, Nosferapti
 from dresseur import Dresseur
 from decoration import afficher_texte, Couleurs, afficher_cadre
 
@@ -21,7 +21,8 @@ class Game:
 
     def run(self):
         #Creation dresseur et ajout pkm
-        
+
+        self.d1.ajouter_pokemon(Nosferapti)
         self.d1.ajouter_pokemon(Lixy)
         self.d2.ajouter_pokemon(Smogo)
         self.d2.ajouter_pokemon(Pikachu)
@@ -40,10 +41,14 @@ class Game:
         if self.a.dresseur1.tous_ko():
             afficher_texte(f"\nVictoire pour {self.a.dresseur2.nom} !")
             print("\n┗━━━━                                                              ━━━━┛")
+            self.d1.soigner_equipe()
+            self.d2.soigner_equipe()
 
         elif self.a.dresseur2.tous_ko():
             afficher_texte(f"\nVictoire pour {self.a.dresseur1.nom} !")
             print("\n┗━━━━                                                              ━━━━┛")
+            self.d1.soigner_equipe()
+            self.d2.soigner_equipe()
 
     def menu_principal(self):
         """ affiche le menu principal """
@@ -71,6 +76,8 @@ class Game:
 
             if choix == "1":
                 self.run()  # Lance le combat
+                self.d1.pokemon = []
+                self.d2.pokemon = []
             elif choix == "2":
                 self.a.modifier_inventaire_pokemon(self.a.dresseur1, Lixy)
                 self.a.modifier_inventaire_pokemon(self.a.dresseur2, Pikachu)
