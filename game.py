@@ -9,7 +9,7 @@ COMMENTAIRES : tkt les couleurs c'est la folie quand t'es fatigué
 """
 
 from combat import Combat
-from pokemon import Lixy, Pikachu, Smogo, Bulbizarre, Nosferapti
+from instances_pokemons import Lixy, Pikachu, Smogo, Bulbizarre, Nosferapti
 from dresseur import Dresseur
 from decoration import afficher_texte, Couleurs, afficher_cadre
 

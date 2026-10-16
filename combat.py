@@ -14,10 +14,19 @@ j'ai modif un peu pour les attaques mais en vrai jsais pas trop comment ça fonc
 from __future__ import annotations
 
 import random
-from pokemon import pokemondispo, Pokemon, Attaque, type_poison
+from pokemon import Pokemon, Attaque, type_poison
+from instances_pokemons import pokemondispo
 from dresseur import Dresseur
 from decoration import barre_de_vie, afficher_texte, afficher_cadre
 from exceptions import PokemonInexistantError
+
+
+def demander_nombre(prompt, mini, maxi):
+    while True:
+        reponse = input(prompt)
+        if reponse.isdigit() and mini <= int(reponse) <= maxi:
+            return int(reponse)
+        print("Choix invalide")
 
 
 class Combat:
@@ -32,7 +41,7 @@ class Combat:
     def modifier_inventaire_pokemon(self, dresseur, pokemon=None):
         """modifier l'inventaire en boucle"""
         afficher_cadre(f"Equipe de {dresseur.nom}", ["1) Ajouter un pokemon", "2) Retirer un pokemon", "3) Afficher l'inventaire"])
-        choix = int(input("-> "))
+        choix = demander_nombre("-> ", 1, 3)
 
         if choix == 1:
             afficher_texte("pokemons disponibles :")
@@ -127,11 +136,8 @@ class Combat:
             
             afficher_cadre(f"Pokemons de {self.dresseur_actif.nom}", lignes_pokemons)
             afficher_texte("choisissez un pokemon (avec son numéro attribué) parmi vos pokemons")
-            choisir_pokemon = int(input(f"-> "))
-            if 1 <= choisir_pokemon <= len(self.dresseur_actif.pokemon):
-                self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon - 1]
-            else:
-                print("Numéro invalide, réessayez.")
+            choisir_pokemon = demander_nombre("-> ", 1, len(self.dresseur_actif.pokemon))
+            self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon - 1]
 
         if self.dresseur_suivant.pokemon_actif is None:
             lignes_pokemons = [f"{self.dresseur_suivant.nom} n'a pas de pokémon actif."]
@@ -142,16 +148,32 @@ class Combat:
 
             afficher_cadre(f"Pokemons de {self.dresseur_suivant.nom}", lignes_pokemons)
             afficher_texte("choisissez un pokemon (avec son numéro attribué) parmi vos pokemons")
-            choisir_pokemon2 = int(input(f"-> "))
-            if 1 <= choisir_pokemon2 <= len(self.dresseur_suivant.pokemon):
-                self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choisir_pokemon2 - 1]
-            else:
-                print("Numéro invalide, réessayez.")
+            choisir_pokemon2 = demander_nombre("-> ", 1, len(self.dresseur_suivant.pokemon))
+            self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choisir_pokemon2 - 1]
 
     def changer_tour(self):
         """alterne joueur actif et suivant"""
         self.dresseur_actif, self.dresseur_suivant = self.dresseur_suivant, self.dresseur_actif
         self.tour += 1
+
+    def demander_remplacement(self, dresseur):
+        if dresseur.est_bot:
+            for i in range(len(dresseur.pokemon)):
+                if not dresseur.pokemon[i].est_ko():
+                    return i
+        lignes_ko = []
+        for i, pkm in enumerate(dresseur.pokemon, 1):
+            statut_pkm = " (KO)" if pkm.est_ko() else f" ({pkm.get_pv()}/{pkm.get_pv_max()} PV)"
+            lignes_ko.append(f"{i}) {pkm.nom} Nv.{pkm.niveau}{statut_pkm}")
+        afficher_cadre(f"Remplacement - {dresseur.nom}", lignes_ko)
+        while True:
+            reponse = input("Quel Pokémon envoyer ? (numéro) -> ")
+            if not reponse.isdigit() or not 1 <= int(reponse) <= len(dresseur.pokemon):
+                print("Choix invalide")
+            elif dresseur.pokemon[int(reponse) - 1].est_ko():
+                print("ouais nan l'autre est mort")
+            else:
+                return int(reponse) - 1
 
     def calculer_degats(self, pkm_attaquant, pkm_defenseur, attaque):
         """Calcul du multiplicateur basé sur le type de l'attaque"""
@@ -203,10 +225,14 @@ class Combat:
     
             choix = meilleure_attaque
         else:
-            choix = int(input("Choisissez une attaque (numéro) -> ")) - 1
+            choix = demander_nombre("Choisissez une attaque (numéro) -> ", 1, len(pkm_attaquant.attaques)) - 1
 
         if 0 <= choix < len(pkm_attaquant.attaques):
             attaque_choisie:Attaque|None = pkm_attaquant.attaques[choix]
+
+            if random.randint(1, 100) > attaque_choisie.precision:
+                afficher_texte(f"\n{pkm_attaquant.nom} utilise {attaque_choisie.nom} mais rate son attaque !")
+                return 0
 
             # Calcul du multiplicateur basé sur le type de l'attaque
             mult = pkm_defenseur.nb_degats_recus(attaque_choisie.type_attaque.nom)
@@ -226,8 +252,8 @@ class Combat:
                     afficher_texte(f"{pkm_defenseur} est empoisonné")
 
             if attaque_choisie.nom == "Ultrason":
-                pkm_defenseur.statut = "Affecté par l'ultrason"
-                afficher_texte(f"{pkm_defenseur} affecté par l'ultrason")
+                pkm_defenseur.statut = "confus"
+                afficher_texte(f"{pkm_defenseur} est confus")
 
             mult = pkm_defenseur.nb_degats_recus(attaque_choisie.type_attaque.nom)
             
@@ -259,6 +285,21 @@ class Combat:
 
         if pkm_actif.statut == "empoisonné":
             pkm_actif.appliquer_poison()
+            if pkm_actif.est_ko():
+                afficher_texte(f"{pkm_actif.nom} succombe au poison !")
+                if self.dresseur_actif.tous_ko():
+                    return False
+                pkm_actif = self.dresseur_actif.pokemon[self.demander_remplacement(self.dresseur_actif)]
+                self.dresseur_actif.pokemon_actif = pkm_actif
+
+        if pkm_actif.statut == "confus":
+            pkm_actif.appliquer_confusion()
+            if pkm_actif.est_ko():
+                afficher_texte(f"{pkm_actif.nom} est KO dans sa confusion !")
+                if self.dresseur_actif.tous_ko():
+                    return False
+                pkm_actif = self.dresseur_actif.pokemon[self.demander_remplacement(self.dresseur_actif)]
+                self.dresseur_actif.pokemon_actif = pkm_actif
             
         afficher_texte(f"\n    Pokémon actif : {pkm_actif.nom} ({pkm_actif.get_pv()}/{pkm_actif.get_pv_max()} PV)")
         afficher_texte(f"    {barre_de_vie(pkm_actif.get_pv(), pkm_actif.get_pv_max())}\n")
@@ -286,7 +327,7 @@ class Combat:
                 self.dresseur_actif.afficher_objets()
 
                 try:
-                    choisir_item = int(input(f"\nChoisissez un objet (numéro) : ")) - 1
+                    choisir_item = demander_nombre("\nChoisissez un objet (numéro) : ", 1, len(self.dresseur_actif.objets)) - 1
                     if 0 <= choisir_item < len(self.dresseur_actif.objets):
                         objet = self.dresseur_actif.objets[choisir_item]
 
@@ -295,7 +336,7 @@ class Combat:
                             # Choisir sur quel Pokémon utiliser l'objet
                             afficher_texte("\n-- Choisissez un Pokémon --")
                             self.dresseur_actif.afficher_pokemons()
-                            choix_pkm = int(input("Sur quel Pokémon ? (numéro) : ")) - 1
+                            choix_pkm = demander_nombre("Sur quel Pokémon ? (numéro) : ", 1, len(self.dresseur_actif.pokemon)) - 1
 
                             if 0 <= choix_pkm < len(self.dresseur_actif.pokemon):
                                 pokemon_cible = self.dresseur_actif.pokemon[choix_pkm]
@@ -321,7 +362,7 @@ class Combat:
                 afficher_texte(f"Vous n'avez pas d'autres pokemons, continuez avec {pkm_actif}")
             else : 
                 print(self.dresseur_actif.afficher_pokemons())
-                choisir_pokemon = int(input(f"choisissez un pokemon (avec son numéro attribué) parmi vos pokemons :\n->"))
+                choisir_pokemon = demander_nombre("choisissez un pokemon (avec son numéro attribué) parmi vos pokemons :\n->", 1, len(self.dresseur_actif.pokemon))
                 self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[choisir_pokemon - 1]
 
             self.attaquer()
@@ -346,34 +387,9 @@ class Combat:
                 afficher_texte(f"gg {self.dresseur_actif.nom} !")
                 return False  # stop la boucle while
             else:
-                # Force l'adversaire à choisir un autre Pokémon
-                lignes_ko = []
-                for i, pkm in enumerate(self.dresseur_suivant.pokemon, 1):
-                    statut_pkm = " (KO)" if pkm.est_ko() else f" ({pkm.get_pv()}/{pkm.get_pv_max()} PV)"
-                    lignes_ko.append(f"{i}) {pkm.nom} Nv.{pkm.niveau}{statut_pkm}")
-
-                afficher_cadre(f"Remplacement - {self.dresseur_suivant.nom}", lignes_ko)
-                
-                if self.dresseur_suivant.est_bot:
-                    choix_nouveau = None
-                    for i in range(len(self.dresseur_suivant.pokemon)):
-                        if not self.dresseur_suivant.pokemon[i].est_ko():
-                            choix_nouveau = i
-                            break
-                else:
-                    choix_nouveau = None
-                    while choix_nouveau is None:
-                        reponse = input("Quel Pokémon envoyer ? (numéro) -> ")
-                        if not reponse.isdigit() or not 1 <= int(reponse) <= len(self.dresseur_suivant.pokemon):
-                            print("Choix invalide")
-                        elif self.dresseur_suivant.pokemon[int(reponse) - 1].est_ko():
-                            print("ouais nan l'autre est mort")
-                        else:
-                            choix_nouveau = int(reponse) - 1
-                    
-                if 0 <= choix_nouveau < len(self.dresseur_suivant.pokemon):
-                    self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choix_nouveau]
-                    afficher_texte(f"{self.dresseur_suivant.nom} envoie {self.dresseur_suivant.pokemon_actif.nom} !")
+                choix_nouveau = self.demander_remplacement(self.dresseur_suivant)
+                self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choix_nouveau]
+                afficher_texte(f"{self.dresseur_suivant.nom} envoie {self.dresseur_suivant.pokemon_actif.nom} !")
 
         # 2. Alternance des dresseurs pour le tour suivant
         self.dresseur_actif, self.dresseur_suivant = self.dresseur_suivant, self.dresseur_actif

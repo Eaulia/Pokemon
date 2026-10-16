@@ -20,11 +20,11 @@ class Dresseur:
 
     def nb_vivants_restants(self):
         """affiche quantité de pokemon encore vivants"""
-        l = self.pokemon
+        vivants = 0
         for pkm in self.pokemon:
-            if pkm.est_ko():
-                l.remove(pkm)
-        return len(self.pokemon)
+            if not pkm.est_ko():
+                vivants += 1
+        return vivants
     
     def ajouter_pokemon(self, pokemon:Pokemon, pokemon2:Pokemon|None = None, pokemon3:Pokemon|None = None):
         """ ajoute pokemon et limite nombre de pokemon à 3 """
