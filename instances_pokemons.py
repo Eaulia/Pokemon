@@ -1,3 +1,9 @@
+"""
+----------------------------------------------------
+INSTANCES_POKEMONS.PY - bibliothèque des pokemons
+----------------------------------------------------
+"""
+
 from pokemon import (
     Pokemon,
     type_electrik,
@@ -22,7 +28,7 @@ from pokemon import (
 
 
 # Lixy (Électrik)
-Lixy = Pokemon("Lixy", 5, type_electrik, niveau=1)
+Lixy = Pokemon("Lixy", 45, type_electrik, niveau=1)
 Lixy.apprendre_attaque(charge)
 Lixy.apprendre_attaque(etincelle)
 Lixy.apprendre_attaque(eclair)

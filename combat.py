@@ -22,6 +22,7 @@ from exceptions import PokemonInexistantError
 
 
 def demander_nombre(prompt, mini, maxi):
+    """sécurise les saisies de l'utilisateur"""
     while True:
         reponse = input(prompt)
         if reponse.isdigit() and mini <= int(reponse) <= maxi:
@@ -178,7 +179,7 @@ class Combat:
     def calculer_degats(self, pkm_attaquant, pkm_defenseur, attaque):
         """Calcul du multiplicateur basé sur le type de l'attaque"""
         mult = pkm_defenseur.nb_degats_recus(attaque.type_attaque.nom)
-        degats_de_base = (attaque.degats + (pkm_attaquant.niveau * 2)) / 5
+        degats_de_base = (attaque.degats + (pkm_attaquant.niveau * 2)) / 4
         # faire /6 si les attaques sont tjr trop puissantes
         return int(degats_de_base * mult)
 
@@ -371,7 +372,7 @@ class Combat:
             ko_texte = """
  _______ _______ _______      _     _    _____   
  |______ |______    |         |____/    |     |  
- |______ ______|    |         |    \_ . |_____| .
+ |______ ______|    |         |    |_ . |_____| .
                                                  
             """
             if pkm_adversaire.image is not None:

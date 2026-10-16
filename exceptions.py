@@ -1,3 +1,9 @@
+"""
+----------------------------------------------------
+EXCEPTIONS.PY - Lever des erreurs
+----------------------------------------------------
+"""
+
 class PokemonKOError(Exception):
     """ si on tente d'attaquer ou interagir avec un Pokémon K.O."""
     pass

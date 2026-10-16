@@ -54,6 +54,7 @@ def afficher_texte(texte, delai=0.02):
     print()
 
 def afficher_texte_rapide(texte, delai=0.01):
+    """affiche texte caractere par caractere"""
     for caractere in texte:
         sys.stdout.write(caractere)
         sys.stdout.flush()

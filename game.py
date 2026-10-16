@@ -20,6 +20,7 @@ class Game:
         self.a = Combat(self.d1, self.d2)
 
     def run(self):
+        """logique pour le combat"""
         #Creation dresseur et ajout pkm
 
         self.d1.ajouter_pokemon(Nosferapti)
@@ -40,20 +41,20 @@ class Game:
 
         if self.a.dresseur1.tous_ko():
             afficher_texte(f"\nVictoire pour {self.a.dresseur2.nom} !")
-            print("\n┗━━━━                                                              ━━━━┛")
+            print("\n┗━━━━                                                                ━━━━┛")
             self.d1.soigner_equipe()
             self.d2.soigner_equipe()
 
         elif self.a.dresseur2.tous_ko():
             afficher_texte(f"\nVictoire pour {self.a.dresseur1.nom} !")
-            print("\n┗━━━━                                                              ━━━━┛")
+            print("\n┗━━━━                                                                ━━━━┛")
             self.d1.soigner_equipe()
             self.d2.soigner_equipe()
 
     def menu_principal(self):
         """ affiche le menu principal """
         while True:   
-            print("┏━━━━                                                              ━━━━┓")
+            print("┏━━━━                                                                ━━━━┓")
             print("""
                                                            [0m
 [0;36m [0;96m▄[0;96;46m▀[0;36m█[0;90;46m▄[0;36m▀▀▀[0;96;46m▄[0;36m██[0;90m▌[0;36m           [0;96m▄[0;96;46m▀[0;90m▄[0;36m   ▄[0;90m▄[0;36m                                          [0m
@@ -83,12 +84,12 @@ class Game:
             elif choix == "2":
                 self.a.modifier_inventaire_pokemon(self.a.dresseur1, Lixy)
                 self.a.modifier_inventaire_pokemon(self.a.dresseur2, Pikachu)
-                print("\n┗━━━━                                                              ━━━━┛")
+                print("\n┗━━━━                                                                ━━━━┛")
             elif choix == "3":
                 Dresseur.modifier_inventaire_item(self.a.dresseur1)
                 Dresseur.modifier_inventaire_item(self.a.dresseur2)
-                print("\n┗━━━━                                                              ━━━━┛")
+                print("\n┗━━━━                                                                ━━━━┛")
             elif choix == "4":
                 print("A jamaiiiis !! 👿\n")
-                print("\n┗━━━━                                                              ━━━━┛")
+                print("\n┗━━━━                                                                ━━━━┛")
                 break

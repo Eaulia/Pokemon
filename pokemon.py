@@ -59,7 +59,7 @@ class Pokemon:
         self.vitesse_base = vitesse
         self.vitesse = vitesse + (self.niveau * 2)
         self.iv_pv = random.randint(0, 31)
-        pv_max = pv_max if pv_max < 10 else int(((pv_max+self.iv_pv)*2*self.niveau)/100+self.niveau+10)
+        pv_max = pv_max + self.iv_pv + (self.niveau * 3) + 10
         self.__pv = pv_max  # pv actuels du pokemon
         self.__pv_max = pv_max
         self.pv_max_base = pv_max # pour l'xp et lvl up
@@ -85,9 +85,11 @@ class Pokemon:
 
     # getter et setter pour les attr privés
     def get_pv(self):
+        """obtenir la variable privée de pv"""
         return self.__pv
 
     def get_pv_max(self):
+        """obtenir la variable privée de pv_max"""
         return self.__pv_max
 
     def set_pv(self, value):
@@ -100,6 +102,7 @@ class Pokemon:
             self.__pv = value
 
     def est_ko(self):
+        """retourne si le pokemon est mort True sinon False"""
         return self.__pv <=0  # pas besoin de condition
 
     def afficher_types(self):
@@ -132,6 +135,7 @@ class Pokemon:
         return False
 
     def prendre_degats(self, value):
+        """ prend des dégats si le pokemon n'est pas ko """
         if self.est_ko():
             raise PokemonKOError(f"{self.nom} est ko et ne peut pas prendre de dégats.")
         # si value est négatif alors on peut ajouter des pv au pokemon au lieu de faire prendre du dégat
@@ -141,6 +145,7 @@ class Pokemon:
         self.set_pv(self.get_pv() - value)  # utilisation du getter pas necessaire ici mais plus propre
 
     def soigner(self, value):
+            """ soigne si le pokemon n'est pas ko """
             if self.est_ko():
                 raise PokemonKOError(f"{self.nom} est ko et ne peut pas etre soigné.")
             # si value est négatif alors on peut ajouter des pv au pokemon au lieu de faire prendre du dégat
@@ -240,16 +245,19 @@ class Pokemon:
             return f"{self.nom} - Niveau {self.niveau} - XP: {self.xp}/{xp_requis} - {self.get_pv()}/{self.get_pv_max()} PV"
 
     def appliquer_poison(self):
+        """applique le poison si le statut est poison"""
         if self.statut == "empoisonné":
             degats_poison = int(self.get_pv_max() * 1/8)  # 12% des PV max
             self.prendre_degats(degats_poison)
             afficher_texte(f"{self.nom} est empoisonné, il perd {degats_poison} PV ! D/")
 
     def appliquer_baisse_atk(self, x):
+        """applique la baisse d'atk si le statut est atk baissé"""
         if self.statut == "atk baissé":
             print(f"L'attaque de {self.nom} à baissé de {x} ! D/")
 
     def appliquer_confusion(self):
+        """applique la confusion si le statut est confus"""
         if self.statut == "confus":
             print(f"{self.nom} est confus..")
             # 50% de chance de se blesser lui meme
@@ -261,6 +269,7 @@ class Pokemon:
         return True
 
     def appliquer_brulure(self):
+        """applique la brulure si le statut est brulé"""
         if self.statut == "brûlé":
             degats_feu = int(self.get_pv_max() * 1/8)  # 12% des PV max
             self.prendre_degats(degats_feu)
