@@ -10,6 +10,7 @@ class Dresseur:
         self.pokemon = []
         self.objets = []
         self.pokemon_actif = None
+        self.est_bot = False
 
     def tous_ko(self) -> bool:
         """True si toute l'equipe est KO"""

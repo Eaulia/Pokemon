@@ -65,7 +65,10 @@ class Combat:
             dresseur.retirer_pokemon(pokemon_choisi)
 
         elif choix == 3:
-            afficher_texte(f"\nInventaire de {dresseur.nom} : {dresseur.pokemon}")
+            if not dresseur.pokemon:
+                afficher_texte(f"{dresseur.nom} n'a pas de pokemon dans son inventaire.")
+            else:
+                afficher_texte(f"\nInventaire de {dresseur.nom} : {dresseur.pokemon}")
 
         afficher_texte(f"\nTu veux continuer à modifier l'inventaire ?")
         choixcontinuer= input("\n1) Oui\n2) Non\n\n-> ")
@@ -108,6 +111,11 @@ class Combat:
         premier_dresseur, deuxieme_dresseur = self.choisir_ordre(self.dresseur1, self.dresseur2)
         self.dresseur_actif = premier_dresseur  # dresseur actif pour le tour
         self.dresseur_suivant = deuxieme_dresseur   # joue au prochain tour
+
+        if self.dresseur_actif.est_bot:
+            self.dresseur_actif.pokemon_actif = self.dresseur_actif.pokemon[0]
+        if self.dresseur_suivant.est_bot:
+            self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[0]
 
         """ Chaque dresseur doit avoir un pokemon actif avant de commencer le combat """
         if self.dresseur_actif.pokemon_actif is None:
@@ -154,6 +162,7 @@ class Combat:
 
     def attaquer(self):
         """ gestion de l'attaque du pokemon adverse """
+
         degats_finaux = 0
         if self.dresseur_actif is None or self.dresseur_suivant is None:
             afficher_texte(" Aucun combat actif ")
@@ -178,7 +187,23 @@ class Combat:
 
         # Affichage propre dans le cadre
         afficher_cadre(f"Attaques de {pkm_attaquant.nom}", lignes_attaques)
-        choix = int(input("Choisissez une attaque (numéro) -> ")) - 1
+
+        if self.dresseur_actif.est_bot:
+            # prend l'atq avec le plus de degats
+            meilleure_attaque = 0
+            degats_max = -1
+            
+            for i in range(len(pkm_attaquant.attaques)):
+                attaque_actuelle = pkm_attaquant.attaques[i]
+                degats = self.calculer_degats(pkm_attaquant, pkm_defenseur, attaque_actuelle)
+                
+                if degats > degats_max:
+                    degats_max = degats
+                    meilleure_attaque = i
+    
+            choix = meilleure_attaque
+        else:
+            choix = int(input("Choisissez une attaque (numéro) -> ")) - 1
 
         if 0 <= choix < len(pkm_attaquant.attaques):
             attaque_choisie:Attaque|None = pkm_attaquant.attaques[choix]
@@ -240,12 +265,15 @@ class Combat:
         afficher_texte(f"    Adversaire : {pkm_adversaire.nom} ({pkm_adversaire.get_pv()}/{pkm_adversaire.get_pv_max()} PV)")
         afficher_texte(f"    {barre_de_vie(pkm_adversaire.get_pv(), pkm_adversaire.get_pv_max())}\n")
 
-        afficher_cadre(f"TOUR {self.tour} - A {self.dresseur_actif.nom} de jouer", [
-            "1) Attaquer",
-            "2) Utiliser un objet",
-            "3) Changer de pokemon"
-        ])
-        choix = input("-> ")
+        if self.dresseur_actif.est_bot:
+            choix = "1"   # puis on tombe dans le if choix == "1" existant
+        else:
+            afficher_cadre(f"TOUR {self.tour} - A {self.dresseur_actif.nom} de jouer", [
+                "1) Attaquer",
+                "2) Utiliser un objet",
+                "3) Changer de pokemon"
+            ])
+            choix = input("-> ")
 
         if choix == "1":
             self.attaquer()
@@ -299,7 +327,16 @@ class Combat:
             self.attaquer()
 
         if pkm_adversaire.est_ko():
-            afficher_texte(f"\n{pkm_adversaire.nom} est KO !")
+            ko_texte = """
+ _______ _______ _______      _     _    _____   
+ |______ |______    |         |____/    |     |  
+ |______ ______|    |         |    \_ . |_____| .
+                                                 
+            """
+            if pkm_adversaire.image is not None:
+                print(f"\n{pkm_adversaire.image}\n")
+            afficher_texte(f"\n{pkm_adversaire.nom.upper()}")
+            print(ko_texte)  
 
             # Gain d'xp
             xp_gagnee = 50 * pkm_adversaire.niveau
@@ -317,11 +354,22 @@ class Combat:
 
                 afficher_cadre(f"Remplacement - {self.dresseur_suivant.nom}", lignes_ko)
                 
-                choix_nouveau = int(input("Quel Pokémon envoyer ? (numéro) -> ")) - 1
-
-                if self.dresseur_suivant.pokemon[choix_nouveau].est_ko():
-                    print("ouais nan l'autre est mort")
-                    choix_nouveau = int(input("Quel Pokémon envoyer ? (numéro) -> ")) - 1
+                if self.dresseur_suivant.est_bot:
+                    choix_nouveau = None
+                    for i in range(len(self.dresseur_suivant.pokemon)):
+                        if not self.dresseur_suivant.pokemon[i].est_ko():
+                            choix_nouveau = i
+                            break
+                else:
+                    choix_nouveau = None
+                    while choix_nouveau is None:
+                        reponse = input("Quel Pokémon envoyer ? (numéro) -> ")
+                        if not reponse.isdigit() or not 1 <= int(reponse) <= len(self.dresseur_suivant.pokemon):
+                            print("Choix invalide")
+                        elif self.dresseur_suivant.pokemon[int(reponse) - 1].est_ko():
+                            print("ouais nan l'autre est mort")
+                        else:
+                            choix_nouveau = int(reponse) - 1
                     
                 if 0 <= choix_nouveau < len(self.dresseur_suivant.pokemon):
                     self.dresseur_suivant.pokemon_actif = self.dresseur_suivant.pokemon[choix_nouveau]
